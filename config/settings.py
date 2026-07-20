@@ -50,8 +50,8 @@ INSTALLED_APPS = [
     'apps.residents',
     'apps.rooms',
     'apps.staff',
-    'rest_framework',
     'apps.incidents',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
