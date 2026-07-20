@@ -1,0 +1,168 @@
+/* ===== Reset ===== */
+body{
+    margin:0;
+    background:#f5f7fb;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+/* ===== Center Page ===== */
+.page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+/* ===== Card ===== */
+.card-box{
+    width:100%;
+    max-width:440px;
+    background:#fff;
+    padding:40px;
+    border-radius:14px;
+    box-shadow:0 12px 30px rgba(0,0,0,.08);
+    transition:.3s;
+}
+
+.card-box:hover{
+    box-shadow:0 18px 40px rgba(0,0,0,.12);
+}
+
+/* ===== Logo ===== */
+.logo{
+    width:60px;
+    height:60px;
+    margin:0 auto 20px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:#2962ff;
+    color:#fff;
+
+    border-radius:12px;
+
+    font-size:30px;
+    font-weight:bold;
+}
+
+/* ===== Title ===== */
+.title{
+    text-align:center;
+    font-size:28px;
+    font-weight:700;
+    margin-bottom:25px;
+}
+
+/* ===== Alert ===== */
+.alert{
+    font-size:14px;
+    border-radius:8px;
+    margin-bottom:25px;
+}
+
+/* ===== Label ===== */
+.form-label{
+    font-size:15px;
+    font-weight:600;
+    margin-bottom:8px;
+}
+
+/* ===== Input ===== */
+.form-control{
+    height:46px;
+    border-radius:8px;
+}
+
+.form-control:focus{
+    border-color:#2962ff;
+    box-shadow:none;
+}
+
+/* ===== Lock Icon ===== */
+.input-group-text{
+    background:#f8f9fa;
+    border-radius:0 8px 8px 0;
+}
+
+/* ===== Small Text ===== */
+small{
+    font-size:13px;
+}
+
+/* ===== Checkbox ===== */
+.form-check-label{
+    font-size:14px;
+}
+
+/* ===== Button ===== */
+.btn{
+    height:48px;
+    border-radius:8px;
+    font-weight:600;
+    transition:.3s;
+}
+
+.btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(13,110,253,.25);
+}
+
+/* ========================= */
+/* Tablet */
+/* ========================= */
+@media (max-width:768px){
+
+    .card-box{
+        max-width:95%;
+        padding:30px;
+    }
+
+    .title{
+        font-size:24px;
+    }
+
+}
+
+/* ========================= */
+/* Mobile */
+/* ========================= */
+@media (max-width:576px){
+
+    .page{
+        padding:15px;
+    }
+
+    .card-box{
+        padding:24px;
+    }
+
+    .logo{
+        width:52px;
+        height:52px;
+        font-size:24px;
+    }
+
+    .title{
+        font-size:22px;
+    }
+
+    .form-control{
+        height:44px;
+    }
+
+    .btn{
+        height:46px;
+    }
+
+    .alert{
+        font-size:13px;
+    }
+
+    .form-label{
+        font-size:14px;
+    }
+
+}

@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NHMS — Nursing Home Management System">
+    <title>{% block title %}NHMS{% endblock %} — Nursing Home Management System</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main stylesheet (design tokens + admin layout) -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="admin-body">
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║  TOP HEADER (fixed, full width)      ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    {% include 'partials/navbar.html' %}
+
+    <!-- ╔══════════════════════════════════════╗ -->
+    <!-- ║  SIDEBAR + MAIN CONTENT WRAPPER      ║ -->
+    <!-- ╚══════════════════════════════════════╝ -->
+    <div class="admin-layout">
+
+        <!-- Left sidebar -->
+        {% include 'partials/sidebar.html' %}
+
+        <!-- Dimmed overlay — mobile only (click to close sidebar) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+        <!-- Main area -->
+        <main class="admin-main" id="adminMain">
+
+            <!-- Breadcrumb row -->
+            <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+                <span>Admin</span>
+                {% block breadcrumb %}{% endblock %}
+            </nav>
+
+            <!-- Page content injected here by child templates -->
+            <div class="admin-content">
+                {% block content %}{% endblock %}
+            </div>
+
+        </main>
+
+    </div><!-- /.admin-layout -->
+
+    <!-- ══ Scripts ══ -->
+    <script src="{% static 'js/script.js' %}"></script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const userMenuToggle = document.getElementById('userMenuToggle');
+            const userDropdown = document.getElementById('userDropdown');
+
+            /* ── Sidebar toggle (hamburger) ── */
+            function openSidebar() {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden'; // prevent scroll behind overlay
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+                });
+            }
+
+            /* Close sidebar when overlay is clicked */
+            if (overlay) {
+                overlay.addEventListener('click', closeSidebar);
+            }
+
+            /* Close sidebar on resize to desktop */
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 992) {
+                    closeSidebar();
+                }
+            });
+
+            /* ── User dropdown ── */
+            function openDropdown() {
+                userDropdown.classList.add('show');
+                userMenuToggle.classList.add('open');
+                userMenuToggle.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeDropdown() {
+                userDropdown.classList.remove('show');
+                userMenuToggle.classList.remove('open');
+                userMenuToggle.setAttribute('aria-expanded', 'false');
+            }
+
+            if (userMenuToggle && userDropdown) {
+                userMenuToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    userDropdown.classList.contains('show') ? closeDropdown() : openDropdown();
+                });
+
+                /* Close dropdown on any outside click */
+                document.addEventListener('click', function (e) {
+                    if (!userMenuToggle.contains(e.target)) {
+                        closeDropdown();
+                    }
+                });
+
+                /* Keyboard: Escape to close dropdown */
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeDropdown();
+                        closeSidebar();
+                    }
+                });
+            }
+        })();
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

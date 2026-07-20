@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Incident Severity{% endblock %}
+
+{% block breadcrumb %}
+<span class="bc-sep"><i class="fas fa-chevron-right" style="font-size:9px;"></i></span>
+<span class="bc-current">Incident Severity</span>
+{% endblock %}
+
+{% block content %}
+
+{# ── Flash messages ── #}
+{% if messages %}
+<div class="messages-area" style="margin-bottom:16px;">
+    {% for msg in messages %}
+    <div class="flash-msg flash-{{ msg.tags }}" role="alert">
+        <i class="fas fa-circle-check"></i>
+        {{ msg }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{# ── Page heading ── #}
+<h1 class="page-title">Incident Severity Levels</h1>
+<p class="page-subtitle">Taxonomy used across Incident &amp; Risk (M7) &mdash; 4 levels, fixed</p>
+
+{# ── Info banner ── #}
+<div class="info-banner" role="note">
+    <i class="fas fa-circle-info"></i>
+    <span><strong>Fixed 4-level taxonomy, referenced across all M7 Incident wireframes. Only descriptions are editable.</strong></span>
+</div>
+
+{# ── Severity table (desktop) / cards (mobile) ── #}
+<div class="severity-card">
+    <table class="severity-table" aria-label="Incident severity levels">
+        <thead>
+            <tr>
+                <th class="col-level">Level</th>
+                <th class="col-desc">Description</th>
+                <th class="col-example">Example</th>
+                <th class="col-edit"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for level in severity_levels %}
+            <tr>
+                <td class="col-level" data-label="Level">
+                    <span class="severity-badge badge-{{ level.color_tag }}">{{ level.name }}</span>
+                </td>
+                <td class="col-desc" data-label="Description">
+                    {{ level.description }}
+                </td>
+                <td class="col-example" data-label="Example">
+                    {{ level.example }}
+                </td>
+                <td class="col-edit">
+                    <a href="#" id="edit-{{ level.name|lower }}">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center; color:#9CA3AF; padding:24px;">
+                    No severity levels found. Run the data migration to seed data.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ── Footer note ── #}
+<p class="severity-note">
+    Levels cannot be added or deleted here. Chart-lock (BR-07) triggers on every incident regardless of severity &mdash;
+    severity only determines the external-reporting deadline (see SLA Configuration, AD-09).
+</p>
+
+{# ── Action bar ── #}
+<div class="action-bar">
+    <a href="#" class="btn-cancel" id="btn-cancel">Cancel</a>
+    <button type="button" class="btn-save" id="btn-save-changes" disabled title="Select a row to edit">
+        Save Changes
+    </button>
+</div>
+
+{% endblock %}

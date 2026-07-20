@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập tài khoản - Bean Spa</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-img">
+                <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <div class="logo-text-wrapper">
+                <div class="logo-text">NURSING HOME</div>
+                <div class="logo-subtitle">Chăm sóc chu đáo - Cuộc sống trọn vẹn</div>
+            </div>
+        </div>
+
+        <div class="menu-toggle" id="mobile-menu">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <nav class="nav-links">
+            <a href="#">Trang chủ</a>
+            <a href="#">Về chúng tôi</a>
+            <a href="{% url 'residents:list' %}">Cư dân</a>
+        </nav>
+
+        <div class="header-right">
+            <div>VI <i class="fas fa-chevron-down"></i></div>
+            <a href="#"><i class="far fa-user"></i> Tài khoản</a>
+            <a href="#"><i class="fas fa-map-marker-alt"></i> Hệ thống chi nhánh</a>
+            <div class="contact-info">
+                <i class="fas fa-phone-alt"></i>
+                <div>
+                    <span>Gọi tư vấn</span><br>
+                    <strong>1900 6750</strong>
+                </div>
+            </div>
+            <i class="fas fa-search"></i>
+            <i class="fas fa-shopping-bag"></i>
+            <a href="#" class="btn-book">Đặt Lịch <i class="far fa-calendar-alt"></i></a>
+        </div>
+    </header>
+
+    <div class="banner">
+        <h1>Đăng nhập tài khoản</h1>
+        <div class="breadcrumb">Trang chủ &gt; <span style="color: #f28b50;">Đăng nhập tài khoản</span></div>
+    </div>
+
+    <div class="main-content">
+        <div class="login-box">
+            <h2>Đăng nhập</h2>
+            <form action="#" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <input type="email" class="form-control" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" placeholder="Mật khẩu" required>
+                </div>
+                <button type="submit" class="btn-login">Đăng nhập</button>
+
+                <div class="login-actions">
+                    <a href="#">Quên mật khẩu?</a>
+                    <a href="#">Đăng ký tại đây</a>
+                </div>
+
+                <div class="social-login">
+                    <p>Hoặc đăng nhập qua</p>
+                    <div class="social-buttons">
+                        <button type="button" class="btn-social btn-facebook"><i class="fab fa-facebook-f"></i>
+                            Facebook</button>
+                        <button type="button" class="btn-social btn-google"><i class="fab fa-google"></i>
+                            Google</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col" style="flex: 1.5;">
+                <div class="logo-container" style="margin-bottom: 15px;">
+                    <div class="logo-img">
+                        <i class="fas fa-hand-holding-heart"></i>
+                    </div>
+                    <div class="logo-text-wrapper">
+                        <div class="logo-text">NURSING HOME</div>
+                        <div class="logo-subtitle">Chăm sóc chu đáo - Cuộc sống trọn vẹn</div>
+                    </div>
+                </div>
+                <p>Nền tảng quản lý chăm sóc toàn diện, bảo mật và tận tâm dành cho cơ sở dưỡng lão cao cấp tại Việt
+                    Nam.</p>
+                <p><i class="fas fa-map-marker-alt"></i> 123 Đường Evergreen, Austin, Texas, VN</p>
+                <p><i class="fas fa-phone-alt"></i> 1900 6750</p>
+                <p><i class="fas fa-envelope"></i> support@beanspa.vn</p>
+                <div class="social-icons">
+                    <span
+                        style="background: #3b5998; color: white; display: flex; align-items: center; justify-content: center;"><i
+                            class="fab fa-facebook-f"></i></span>
+                    <span
+                        style="background: #bc2a8d; color: white; display: flex; align-items: center; justify-content: center;"><i
+                            class="fab fa-instagram"></i></span>
+                    <span
+                        style="background: #ff0000; color: white; display: flex; align-items: center; justify-content: center;"><i
+                            class="fab fa-youtube"></i></span>
+                    <span
+                        style="background: #000000; color: white; display: flex; align-items: center; justify-content: center;"><i
+                            class="fab fa-tiktok"></i></span>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h3>CÁC PHÂN HỆ HỆ THỐNG</h3>
+                <ul>
+                    <li><a href="#">Quản lý Hồ sơ cư dân</a></li>
+                    <li><a href="#">Quản lý Cán bộ nhân viên</a></li>
+                    <li><a href="#">Hồ sơ y tế & Thuốc men</a></li>
+                    <li><a href="#">Thanh toán & Hóa đơn</a></li>
+                    <li><a href="#">Quản lý Phòng & Cơ sở vật chất</a></li>
+                    <li><a href="#">Báo cáo thống kê toàn diện</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>TÀI NGUYÊN HỖ TRỢ</h3>
+                <ul>
+                    <li><a href="#">Mẹo sử dụng phần mềm</a></li>
+                    <li><a href="#">Tiêu chuẩn y tế MHLW</a></li>
+                    <li><a href="#">Các yêu cầu hỗ trợ kỹ thuật</a></li>
+                    <li><a href="#">Trang thái hệ thống (Uptime)</a></li>
+                    <li><a href="#">Video bài giảng tập huấn</a></li>
+                    <li><a href="#">Thông tin cập nhật phiên bản</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col" style="flex: 1.5;">
+                <h3>Đăng ký Nhận Tin</h3>
+                <p>Đăng ký ngay để nhận thật nhiều ưu đãi</p>
+                <form class="subscribe-form">
+                    <input type="email" placeholder="Nhập email của bạn">
+                    <button type="submit">Đăng ký</button>
+                </form>
+                <div
+                    style="margin-top: 20px; background: #e9ecef; height: 100px; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                    <span style="color: #6c757d;">Facebook Fanpage Widget</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="footer-bottom">
+        <div>© Bản quyền thuộc về NURSING HOME | Cung cấp bởi Nhóm 8</div>
+        <div>
+            <a href="#">Trung tâm hỗ trợ</a>
+            <a href="#">Điều khoản & Điều kiện</a>
+        </div>
+    </div>
+
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    </script>
+</body>
+
+</html>

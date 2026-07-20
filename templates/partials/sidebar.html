@@ -1,0 +1,123 @@
+<nav class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
+    <div class="sidebar-nav">
+
+        <!-- ── No group: Dashboard ── -->
+        <div class="sidebar-group">
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'dashboard' %}active{% endif %}"
+               id="nav-dashboard">
+                <i class="fas fa-gauge-high sidebar-icon"></i>
+                Dashboard
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- ── USER & ROLE MANAGEMENT ── -->
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">User &amp; Role Management</div>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'users' %}active{% endif %}"
+               id="nav-users">
+                <i class="fas fa-users sidebar-icon"></i>
+                Users
+            </a>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'roles' %}active{% endif %}"
+               id="nav-roles">
+                <i class="fas fa-user-shield sidebar-icon"></i>
+                Roles
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- ── FACILITY & CONFIGURATION ── -->
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Facility &amp; Configuration</div>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'facility' %}active{% endif %}"
+               id="nav-facility">
+                <i class="fas fa-building sidebar-icon"></i>
+                Facility
+            </a>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'loc_rates' %}active{% endif %}"
+               id="nav-loc-rates">
+                <i class="fas fa-file-invoice-dollar sidebar-icon"></i>
+                LOC Rates
+            </a>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'staffing' %}active{% endif %}"
+               id="nav-staffing">
+                <i class="fas fa-user-clock sidebar-icon"></i>
+                Staffing
+            </a>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'equipment' %}active{% endif %}"
+               id="nav-equipment">
+                <i class="fas fa-toolbox sidebar-icon"></i>
+                Equipment
+            </a>
+
+            <a href="{% url 'incidents:list' %}"
+               class="sidebar-link {% if active_menu == 'incident_severity' %}active{% endif %}"
+               id="nav-incident-severity">
+                <i class="fas fa-shield-halved sidebar-icon"></i>
+                Incident Severity
+            </a>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'sla_config' %}active{% endif %}"
+               id="nav-sla-config">
+                <i class="fas fa-sliders sidebar-icon"></i>
+                SLA Config
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- ── DATA & SEEDING ── -->
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Data &amp; Seeding</div>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'data' %}active{% endif %}"
+               id="nav-data">
+                <i class="fas fa-database sidebar-icon"></i>
+                Data
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- ── AUDIT & SECURITY ── -->
+        <div class="sidebar-group">
+            <div class="sidebar-group-label">Audit &amp; Security</div>
+
+            <a href="#"
+               class="sidebar-link {% if active_menu == 'audit' %}active{% endif %}"
+               id="nav-audit">
+                <i class="fas fa-file-shield sidebar-icon"></i>
+                Audit
+            </a>
+        </div>
+
+    </div><!-- /sidebar-nav -->
+
+    <!-- ── Footer: Logout ── -->
+    <div class="sidebar-footer">
+        <a href="{% url 'accounts:login' %}"
+           class="sidebar-link"
+           id="nav-logout">
+            <i class="fas fa-right-from-bracket sidebar-icon"></i>
+            Logout
+        </a>
+    </div>
+</nav>

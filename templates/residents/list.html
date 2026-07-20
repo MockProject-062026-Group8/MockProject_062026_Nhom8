@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident List - Nursing Home</title>
+    <link rel="stylesheet" href="{% static 'css/residents.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="residents-page">
+
+<div class="app-shell">
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- ===== Menu / Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="dot"></span> NURSING HOME
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#"><i class="fas fa-gauge"></i> Dashboard</a></li>
+            <li><a href="{% url 'residents:list' %}" class="active"><i class="fas fa-user-group"></i> Residents</a></li>
+            <li><a href="#"><i class="fas fa-bed-pulse"></i> Rooms</a></li>
+            <li><a href="#"><i class="fas fa-notes-medical"></i> Medical</a></li>
+            <li><a href="#"><i class="fas fa-user-nurse"></i> Staff</a></li>
+            <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Billing</a></li>
+            <li><a href="#"><i class="fas fa-gear"></i> Settings</a></li>
+        </ul>
+    </aside>
+
+    <div class="main">
+        <!-- ===== Top bar ===== -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Resident List</h1>
+            </div>
+            <button class="btn-primary"><i class="fas fa-plus"></i> Add New Resident</button>
+        </header>
+
+        <div class="content">
+            <!-- ===== Search + filters ===== -->
+            <form class="toolbar" method="get">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="q" value="{{ query }}"
+                           placeholder="Search by name, room number, or resident ID...">
+                </div>
+                <div class="filter-tabs">
+                    <a href="?status=all{% if query %}&q={{ query }}{% endif %}"
+                       class="{% if status_filter == 'all' %}active{% endif %}">All ({{ counts.all }})</a>
+                    <a href="?status=active{% if query %}&q={{ query }}{% endif %}"
+                       class="{% if status_filter == 'active' %}active{% endif %}">Active ({{ counts.active }})</a>
+                    <a href="?status=discharged{% if query %}&q={{ query }}{% endif %}"
+                       class="{% if status_filter == 'discharged' %}active{% endif %}">Discharged ({{ counts.discharged }})</a>
+                    <a href="?status=pending{% if query %}&q={{ query }}{% endif %}"
+                       class="{% if status_filter == 'pending' %}active{% endif %}">Pending ({{ counts.pending }})</a>
+                </div>
+            </form>
+
+            <div class="table-card">
+                {% if residents %}
+                <!-- ===== Desktop / tablet table ===== -->
+                <div class="table-scroll">
+                    <table class="residents">
+                        <thead>
+                            <tr>
+                                <th>Res ID</th>
+                                <th>Name</th>
+                                <th>Room</th>
+                                <th>Status</th>
+                                <th>DOB</th>
+                                <th>YOB</th>
+                                <th>Gender</th>
+                                <th>Payer Source</th>
+                                <th>Admission Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in residents %}
+                            <tr>
+                                <td class="res-id">{{ r.resident_id }}</td>
+                                <td>{{ r.full_name }}</td>
+                                <td>{{ r.room_number }}</td>
+                                <td><span class="badge {{ r.status }}">{{ r.status|capfirst }}</span></td>
+                                <td>{{ r.dob|date:"m/d/Y" }}</td>
+                                <td>{{ r.yob }}</td>
+                                <td>
+                                    {% if r.gender == 'female' %}<i class="fas fa-venus gender-icon"></i>Female
+                                    {% elif r.gender == 'male' %}<i class="fas fa-mars gender-icon"></i>Male
+                                    {% else %}<i class="fas fa-genderless gender-icon"></i>Other{% endif %}
+                                </td>
+                                <td>{{ r.payer_source }}</td>
+                                <td>{{ r.admission_date|date:"m/d/Y" }}</td>
+                                <td><a href="#" class="btn-view">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ===== Mobile stacked cards ===== -->
+                <div class="card-list">
+                    {% for r in residents %}
+                    <div class="resident-card">
+                        <div class="resident-card-head">
+                            <div>
+                                <div class="name">{{ r.full_name }}</div>
+                                <div class="rid">{{ r.resident_id }} · Room {{ r.room_number }}</div>
+                            </div>
+                            <span class="badge {{ r.status }}">{{ r.status|capfirst }}</span>
+                        </div>
+                        <div class="resident-card-grid">
+                            <div><span class="label">DOB</span>{{ r.dob|date:"m/d/Y" }}</div>
+                            <div><span class="label">YOB</span>{{ r.yob }}</div>
+                            <div><span class="label">Gender</span>{{ r.gender|capfirst }}</div>
+                            <div><span class="label">Payer Source</span>{{ r.payer_source }}</div>
+                            <div><span class="label">Admission Date</span>{{ r.admission_date|date:"m/d/Y" }}</div>
+                        </div>
+                        <a href="#" class="btn-view">View</a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-slash" style="font-size:28px; margin-bottom:10px; display:block;"></i>
+                    No residents match your search or filter.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const toggle = document.getElementById('menuToggle');
+
+    function openMenu() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+    }
+    function closeMenu() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+    }
+    toggle.addEventListener('click', openMenu);
+    backdrop.addEventListener('click', closeMenu);
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment History — {{ resident.full_name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="#" style="color:#64748b;text-decoration:none">Residents</a> <span style="margin:0 8px;color:#cbd5e1">></span> 
+<span style="color:#64748b">{{ resident.full_name }}</span> <span style="margin:0 8px;color:#cbd5e1">></span>
+<span style="color:#0f172a">Assessments</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sc023-wrap { max-width: 1000px; margin: 0 auto; padding-bottom: 80px; }
+  
+  /* Header */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+  .header-left h1 { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+  .header-left p { font-size: 13px; color: #64748b; margin: 0; }
+  .header-right { display: flex; gap: 12px; }
+  
+  .btn-outline { border: 1px solid #cbd5e1; background: #fff; color: #475569; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .btn-primary { background: #3b82f6; border: 1px solid #3b82f6; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  
+  /* Table */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th { background: #f8fafc; padding: 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+  .history-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; vertical-align: middle; }
+  .history-table tr:last-child td { border-bottom: none; }
+  
+  .font-bold { font-weight: 700; color: #0f172a; }
+  
+  /* Badges */
+  .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .badge-initial { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+  .badge-reassessment { background: #faf5ff; color: #a855f7; border: 1px solid #e9d5ff; }
+  
+  .loc-badge { padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+  .loc-level-3 { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+  .loc-level-2 { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+  .loc-level-1 { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+  
+  /* Actions */
+  .action-link { color: #3b82f6; font-weight: 600; text-decoration: none; font-size: 13px; }
+  .action-link:hover { text-decoration: underline; }
+  
+  /* Info Box */
+  .info-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; }
+  .info-box h4 { margin: 0 0 8px 0; font-size: 14px; color: #334155; }
+  .info-box p { margin: 0; font-size: 13px; color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc023-wrap">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Assessment History — {{ resident.full_name }}</h1>
+      <p>{{ assessments|length }} assessments on record · sorted newest first</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-outline">Select 2 to Compare</button>
+      <form method="POST" action="{% url 'medical:create_reassessment' resident.resident_id %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-primary">+ New</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Author</th>
+          <th>ADL Score</th>
+          <th>LOC Tier</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in assessments %}
+        <tr>
+          <td class="font-bold">v{{ a.version }}</td>
+          <td>
+            {% if a.assessment_type == 'initial' %}
+              <span class="badge badge-initial">Initial</span>
+            {% else %}
+              <span class="badge badge-reassessment">Reassessment</span>
+            {% endif %}
+          </td>
+          <td>{{ a.assessment_date|date:"Y-m-d" }}</td>
+          <td>{{ a.author.first_name }} {{ a.author.last_name }}, RN</td>
+          <td>{{ a.total_adl_score }} / 32</td>
+          <td>
+            {% if a.loc_tier == 'Level 3' %}
+              <span class="loc-badge loc-level-3">Level 3</span>
+            {% elif a.loc_tier == 'Level 2' %}
+              <span class="loc-badge loc-level-2">Level 2</span>
+            {% else %}
+              <span class="loc-badge loc-level-1">{{ a.loc_tier|default:"Level 1" }}</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            {% if forloop.first %}
+              <a href="#" class="action-link">Current • View</a>
+            {% else %}
+              <a href="#" class="action-link">View • Compare</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: #94a3b8;">No assessments found for this resident.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="info-box">
+    <h4>Reassessment cadence: every 90 days (BR-03) or on Significant Change flag (BR-05).</h4>
+    <p>Starting a reassessment opens the Initial Assessment form pre-filled from the latest version.</p>
+  </div>
+</div>
+{% endblock %}
