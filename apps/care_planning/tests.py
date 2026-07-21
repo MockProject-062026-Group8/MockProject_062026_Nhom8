@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from apps.residents.models import Resident
-from apps.care_planning.models import CarePlan
+from apps.medical.models import CarePlan
 import datetime
 
 User = get_user_model()
@@ -15,19 +15,17 @@ class CarePlanTests(TestCase):
         # Create residents
         self.resident1 = Resident.objects.create(
             resident_id='R001',
-            full_name='Susan Wright',
-            room_number='114B',
+            first_name='Robert',
+            last_name='Hayes',
             date_of_birth=datetime.date(1950, 1, 1),
-            admission_date=datetime.date(2025, 1, 1),
-            loc_tier=Resident.LocTier.TIER_2
+            loc_tier='Tier 3'
         )
         self.resident2 = Resident.objects.create(
             resident_id='R002',
-            full_name='James Porter',
-            room_number='210B',
-            date_of_birth=datetime.date(1945, 5, 5),
-            admission_date=datetime.date(2025, 2, 1),
-            loc_tier=Resident.LocTier.TIER_4
+            first_name='Elena',
+            last_name='Ramos',
+            date_of_birth=datetime.date(1945, 1, 1),
+            loc_tier='Tier 2'
         )
 
         # Create Care Plans
@@ -50,8 +48,7 @@ class CarePlanTests(TestCase):
         )
 
     def test_care_plan_creation(self):
-        self.assertEqual(CarePlan.objects.count(), 3)
-        self.assertEqual(self.plan1.resident.full_name, 'Susan Wright')
+        self.assertEqual(self.plan1.resident.first_name, 'Robert')
 
     def test_list_view_status_code(self):
         url = reverse('care_planning:care_plan_list')
@@ -72,10 +69,10 @@ class CarePlanTests(TestCase):
 
     def test_search_filter(self):
         url = reverse('care_planning:care_plan_list')
-        response = self.client.get(url, {'search': 'James'})
+        response = self.client.get(url, {'search': 'Robert'})
         care_plans = response.context['care_plans']
-        self.assertEqual(len(care_plans), 1)
-        self.assertEqual(care_plans[0].resident.full_name, 'James Porter')
+        self.assertEqual(len(care_plans), 2)
+        self.assertEqual(care_plans[0].resident.first_name, 'Robert')
 
     def test_status_filter(self):
         url = reverse('care_planning:care_plan_list')

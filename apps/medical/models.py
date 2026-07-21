@@ -350,17 +350,25 @@ class VitalSign(models.Model):
 # ==========================================
 class CarePlan(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'draft', 'Draft'
-        PENDING_REVIEW = 'pending_review', 'Pending Review'
-        ACTIVE = 'active', 'Active'
-        REVIEW_DUE = 'review_due', 'Review Due'
-        NEEDS_UPDATE = 'needs_update', 'Needs Update'
-        RESOLVED = 'resolved', 'Resolved'
-        DISCONTINUED = 'discontinued', 'Discontinued'
+        DRAFT = 'DRAFT', 'Draft'
+        PENDING_REVIEW = 'PENDING_REVIEW', 'Pending Review'
+        ACTIVE = 'ACTIVE', 'Active'
+        REVIEW_DUE = 'REVIEW_DUE', 'Review Due'
+        NEEDS_UPDATE = 'NEEDS_UPDATE', 'Needs Update'
+        RESOLVED = 'RESOLVED', 'Resolved'
+        DISCONTINUED = 'DISCONTINUED', 'Discontinued'
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     significant_change_flag = models.BooleanField(default=False)
     resident = models.ForeignKey('residents.Resident', on_delete=models.CASCADE, related_name='medical_care_plans')
+    
+    last_review_date = models.DateField(null=True, blank=True)
+    next_review_date = models.DateField(null=True, blank=True)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_medical_care_plans')
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_medical_care_plans')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(null=True, blank=True)
+
     is_deleted = models.BooleanField(default=False)
     last_review_date = models.DateField(null=True, blank=True)
     next_review_date = models.DateField(null=True, blank=True)

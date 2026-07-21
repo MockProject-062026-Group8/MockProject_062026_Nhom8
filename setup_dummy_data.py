@@ -27,10 +27,9 @@ except Exception as e:
 res, created = Resident.objects.get_or_create(
     resident_id='RES001',
     defaults={
-        'full_name': 'Robert Hayes',
-        'room_number': '101A',
+        'first_name': 'Robert',
+        'last_name': 'Hayes',
         'date_of_birth': '1950-01-01',
-        'admission_date': '2025-01-01'
     }
 )
 
@@ -45,22 +44,22 @@ for r in rates:
     LOCRate.objects.get_or_create(loc_level=r['loc_level'], defaults={'daily_rate': r['daily_rate']})
 
 # Create Assessment
-if not Assessment.objects.filter(resident=res).exists():
-    Assessment.objects.create(
-        resident=res,
-        version=3,
-        assessment_type='initial',
-        author=user,
-        total_adl_score=20,
-        adl_bed_mobility=2,
-        adl_transfer=3,
-        adl_locomotion=3,
-        adl_dressing=2,
-        adl_eating=1,
-        adl_toilet_use=3,
-        adl_personal_hygiene=3,
-        adl_bathing=3,
-        loc_tier=None,
-        is_locked=False
-    )
+# if not Assessment.objects.filter(resident=res).exists():
+#     Assessment.objects.create(
+#         resident=res,
+#         version=3,
+#         assessment_type='initial',
+#         author=user,
+#         total_adl_score=20,
+#         adl_bed_mobility=2,
+#         adl_transfer=3,
+#         adl_locomotion=3,
+#         adl_dressing=2,
+#         adl_eating=1,
+#         adl_toilet_use=3,
+#         adl_personal_hygiene=3,
+#         adl_bathing=3,
+#         loc_tier=None,
+#         is_locked=False
+#     )
 print("Dummy data setup complete.")

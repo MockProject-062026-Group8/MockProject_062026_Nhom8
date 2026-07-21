@@ -1,0 +1,67 @@
+.banner-validity {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.readonly-wrapper {
+    position: relative;
+}
+
+.readonly-input {
+    background-color: #f9fafb !important;
+    color: #6b7280 !important;
+    cursor: not-allowed;
+    padding-right: 30px !important;
+}
+
+.lock-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.field-subtext {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.required {
+    color: #ef4444;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.checkbox-group label {
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    display: inline;
+}
+
+.field-error {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+    width: 100%;
+}

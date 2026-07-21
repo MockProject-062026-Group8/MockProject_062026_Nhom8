@@ -14,13 +14,14 @@ class CarePlanListView(ListView):
         search = self.request.GET.get('search', '')
         if search:
             queryset = queryset.filter(
-                Q(resident__full_name__icontains=search) | 
+                Q(resident__first_name__icontains=search) | 
+                Q(resident__last_name__icontains=search) | 
                 Q(resident__resident_id__icontains=search)
             )
 
         status_filter = self.request.GET.get('status', 'all')
         if status_filter and status_filter != 'all':
-            queryset = queryset.filter(status=status_filter)
+            queryset = queryset.filter(status=status_filter.upper())
             
         review_filter = self.request.GET.get('review', 'all')
         if review_filter == 'due':
@@ -58,6 +59,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+
 def care_plan_create_page(request):
 
     # =====================
@@ -67,7 +69,7 @@ def care_plan_create_page(request):
         resident_id = request.POST.get("resident_id", 1)
         action = request.POST.get("action", "save_draft")
 
-        status = "DRAFT" if action == "save_draft" else "PENDING_REVIEW"
+        status = CarePlan.Status.DRAFT if action == "save_draft" else CarePlan.Status.PENDING_REVIEW
 
         # 1. Tạo Care Plan
         # Sử dụng DRAFT hoặc ACTIVE để khớp 100% với STATUS_CHOICES trong models.py
@@ -92,7 +94,7 @@ def care_plan_create_page(request):
             )
 
         messages.success(request, f"Care Plan created successfully with status: {status}")
-        return redirect("care_plan_create")
+        return redirect("care_planning:care_plan_create")
 
     # =====================
     # DISPLAY PAGE (GET) & HOLIDAY CHECK LOGIC
@@ -281,10 +283,8 @@ def approve_care_plan(request, pk=None):
         if pk:
             care_plan = CarePlan.objects.filter(pk=pk).first()
             if care_plan:
-                if hasattr(care_plan, 'status'):
-                    care_plan.status = "ACTIVE"
-                if hasattr(care_plan, 'approved_at'):
-                    care_plan.approved_at = timezone.now()
+                care_plan.status = CarePlan.Status.ACTIVE
+                care_plan.approved_at = timezone.now()
                 if hasattr(care_plan, 'approved_by'):
                     care_plan.approved_by = request.user if request.user.is_authenticated else None
                 care_plan.save()
@@ -320,10 +320,8 @@ def reject_care_plan(request, pk=None):
         if pk:
             care_plan = CarePlan.objects.filter(pk=pk).first()
             if care_plan:
-                if hasattr(care_plan, 'status'):
-                    care_plan.status = "DRAFT"
-                if hasattr(care_plan, 'rejection_reason'):
-                    care_plan.rejection_reason = reason
+                care_plan.status = CarePlan.Status.DRAFT
+                care_plan.rejection_reason = reason
                 care_plan.save()
                 return JsonResponse({"status": "success", "message": "Care Plan rejected and returned to Draft!"})
 
