@@ -23,21 +23,7 @@ class Migration(migrations.Migration):
             name='approved_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_medical_care_plans', to=settings.AUTH_USER_MODEL),
         ),
-        migrations.AddField(
-            model_name='careplan',
-            name='assigned_to',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_medical_care_plans', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='careplan',
-            name='last_review_date',
-            field=models.DateField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='careplan',
-            name='next_review_date',
-            field=models.DateField(blank=True, null=True),
-        ),
+
         migrations.AddField(
             model_name='careplan',
             name='rejection_reason',
