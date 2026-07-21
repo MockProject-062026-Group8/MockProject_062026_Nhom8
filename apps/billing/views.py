@@ -1,26 +1,36 @@
+import calendar
+from datetime import date
 from django.shortcuts import render
+from apps.billing.models import LOCRate
+from apps.medical.models import Holiday
 
-# Create your views here.
 def billing_panel(request):
     """
     SC035 - Cost / Billing Panel
-    Dummy data based on Figma mockup + Holiday CR Logic
+    Connected to DB for Holiday and LOC Rate
     """
     # Base daily rates
-    loc_daily_rate = 285.00
-    room_rate = 140.00
+    loc_rate_obj = LOCRate.objects.first()
+    loc_daily_rate = float(loc_rate_obj.daily_rate) if loc_rate_obj else 285.00
+    room_rate = 140.00  # Hardcoded as Room model doesn't have a rate yet
     medication_est = 45.00
-    subtotal_per_day = loc_daily_rate + room_rate + medication_est # 470.00
-
-    # CR Holidays Logic
-    days_in_month = 30
-    holiday_days = 1 # e.g. July 4th
-    standard_days = days_in_month - holiday_days # 29
-
+    subtotal_per_day = loc_daily_rate + room_rate + medication_est
     
+    # CR Holidays Logic
+    today = date.today()
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    
+    # Count holidays in this month
+    holiday_days = Holiday.objects.filter(
+        holiday_date__year=today.year, 
+        holiday_date__month=today.month
+    ).count()
+    
+    standard_days = days_in_month - holiday_days
+
     # Holiday Surcharge (assumed $100 per holiday)
     holiday_surcharge_per_day = 100.00
-    total_holiday_surcharge = holiday_days * holiday_surcharge_per_day # 100.00
+    total_holiday_surcharge = holiday_days * holiday_surcharge_per_day
 
     # Monthly calculation
     estimated_monthly = (standard_days * subtotal_per_day) + (holiday_days * (subtotal_per_day + holiday_surcharge_per_day))

@@ -210,59 +210,64 @@ def api_remove_diagnosis(request, assessment_id, diagnosis_id):
 
 def reassessments(request):
     """
-    SC034 - Reassessments (Đánh giá lại hồ sơ bệnh án)
-    Dummy data based on Figma mockup
+    SC034 - Reassessments connected to DB
     """
-    reassessments_list = [
-        {
-            'resident': 'Robert Hayes',
-            'room': '204B',
-            'trigger': '90-day cycle',
-            'due_date': '2026-06-28',
-            'overdue': '4 days',
-            'status': 'Review Due',
-            'action': 'Start',
-            'is_escalated': True,
-        },
-        {
-            'resident': 'James Porter',
-            'room': '210B',
-            'trigger': '90-day cycle',
-            'due_date': '2026-07-03',
-            'overdue': '2 days',
-            'status': 'Review Due',
-            'action': 'Start',
-            'is_escalated': False,
-        },
-        {
-            'resident': 'Susan Wright',
-            'room': '114B',
-            'trigger': 'Significant Change (SCS)',
-            'due_date': '—',
-            'overdue': '—',
-            'status': 'Needs Update',
-            'action': 'Start',
-            'is_escalated': False,
-        },
-        {
-            'resident': 'Mary Coleman',
-            'room': '118A',
-            'trigger': '90-day cycle',
-            'due_date': '2026-07-20',
-            'overdue': '—',
-            'status': 'Active',
-            'action': 'View',
-            'is_escalated': False,
-        },
-    ]
+    from datetime import timedelta
+    now = timezone.now().date()
+    
+    plans = CarePlan.objects.filter(
+        status__in=[CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE, CarePlan.Status.ACTIVE]
+    ).select_related('resident')
+    
+    reassessments_list = []
+    total_reassessments = 0
+    total_overdue = 0
+    
+    for plan in plans:
+        overdue_str = '—'
+        is_overdue = False
+        due_date_str = plan.next_review_date.strftime('%Y-%m-%d') if plan.next_review_date else '—'
+        
+        if plan.next_review_date and plan.next_review_date < now:
+            days = (now - plan.next_review_date).days
+            overdue_str = f'{days} days'
+            is_overdue = True
+            if plan.status == CarePlan.Status.ACTIVE:
+                plan.status = CarePlan.Status.REVIEW_DUE
+                plan.save()
+                
+        if plan.status in [CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE]:
+            total_reassessments += 1
+            if is_overdue:
+                total_overdue += 1
+                
+        trigger = '90-day cycle' if not plan.significant_change_flag else 'Significant Change (SCS)'
+        action = 'Start' if plan.status in [CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE] else 'View'
+        
+        room_name = plan.resident.bed.room.room_number if hasattr(plan.resident, 'bed') and plan.resident.bed and plan.resident.bed.room else 'Unassigned'
+        
+        reassessments_list.append({
+            'id': plan.id,
+            'resident': plan.resident.full_name,
+            'room': room_name,
+            'trigger': trigger,
+            'due_date': due_date_str,
+            'overdue': overdue_str,
+            'status': plan.get_status_display(),
+            'action': action,
+            'is_escalated': is_overdue and plan.next_review_date and (now - plan.next_review_date).days > 3,
+        })
+
+    reassessments_list.sort(key=lambda x: (x['action'] == 'View', not x['is_escalated']))
 
     context = {
         'active_menu': 'care_planning',
         'reassessments_list': reassessments_list,
-        'total_reassessments': 3,
-        'total_overdue': 1,
+        'total_reassessments': total_reassessments,
+        'total_overdue': total_overdue,
     }
     return render(request, 'medical/reassessments.html', context)
+
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -272,11 +277,23 @@ import json
 def start_reassessment(request):
     try:
         data = json.loads(request.body)
-        # Mocking DB operation
+        plan_id = data.get('plan_id')
+        
+        plan = CarePlan.objects.get(id=plan_id)
+        from .models import Assessment
+        
+        Assessment.objects.create(
+            resident=plan.resident,
+            assessment_type='periodic' if not plan.significant_change_flag else 'change_of_condition',
+            status='draft'
+        )
+        
         return JsonResponse({
             'status': 'success',
-            'message': 'Reassessment started'
+            'message': 'Reassessment started successfully'
         })
+    except CarePlan.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Care Plan not found'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 from django.shortcuts import render, get_object_or_404, redirect
@@ -513,57 +530,85 @@ class CareGoalDetailView(generics.RetrieveUpdateDestroyAPIView):
 def bedside_vitals(request):
     """
     SC033 - Bedside Vitals (Ghi nhận Sinh hiệu tại giường)
-    Dummy data based on Figma mockup
+    Connected to DB for SC033
     """
-    context = {
-        'active_menu': 'care_planning',
-        'resident_name': 'Robert Hayes',
-        'room_number': 'Room 204B',
-        'task_name': 'Vitals check',
-        'due_time': 'due 14:00',
-        'recorder_name': 'Marcus Rivera, CNA',
-        'recorder_time': '2026-07-02 14:05',
-    }
-    return render(request, 'medical/bedside_vitals.html', context)
-
-def daily_tasks(request):
-    # Dummy data based on the Figma mockup for SC032
-    tasks_data = [
-        {
-            'resident_name': 'Robert Hayes',
-            'room': 'Room 204B',
-            'status': 'Active',
-            'has_active_plan': True,
-            'tasks': [
-                {'id': 1, 'name': 'Ambulation assist (AM)', 'due': '08:00', 'overdue': False, 'state': 'Done'},
-                {'id': 2, 'name': 'Reposition + skin check', 'due': '10:00', 'overdue': False, 'state': 'Done'},
-                {'id': 3, 'name': 'Vitals check', 'due': '14:00', 'overdue': True, 'state': 'Refused'},
-            ]
-        },
-        {
-            'resident_name': 'Elena Ramos',
-            'room': 'Room 106A',
-            'status': 'Draft',
-            'has_active_plan': False,
-            'tasks': []
-        },
-        {
-            'resident_name': 'David Nguyen',
-            'room': 'Room 222A',
-            'status': 'Active',
-            'has_active_plan': True,
-            'tasks': [
-                {'id': 4, 'name': 'Assist with meal', 'due': '12:00', 'overdue': False, 'state': 'Done'},
-                {'id': 5, 'name': 'Fluid intake monitoring', 'due': '15:00', 'overdue': False, 'state': 'Refused'},
-            ]
-        }
-    ]
+    resident = Resident.objects.first()
+    task = CareTask.objects.filter(status='PENDING').first()
+    now = timezone.now()
     
     context = {
         'active_menu': 'care_planning',
+        'resident_name': resident.full_name if resident else 'Robert Hayes',
+        'room_number': resident.bed.room.room_number if resident and hasattr(resident, 'bed') and resident.bed and resident.bed.room else 'Room 204B',
+        'task_name': task.task_type if task else 'Vitals check',
+        'due_time': f"due {task.scheduled_time.strftime('%H:%M')}" if task and task.scheduled_time else 'due 14:00',
+        'recorder_name': request.user.get_full_name() if request.user.is_authenticated else 'Marcus Rivera, CNA',
+        'recorder_time': now.strftime('%Y-%m-%d %H:%M'),
+        'resident_id': resident.id if resident else 1
+    }
+    return render(request, 'medical/bedside_vitals.html', context)
+
+from django.utils import timezone
+from apps.residents.models import Resident
+from apps.medical.models import CareTask
+
+def daily_tasks(request):
+    residents = Resident.objects.prefetch_related(
+        'medical_care_plans', 
+        'medical_care_plans__careintervention_set__caretask_set',
+        'bed__room'
+    )
+    
+    tasks_data = []
+    completed_tasks = 0
+    total_tasks = 0
+    now = timezone.now()
+    
+    for resident in residents:
+        active_plan = resident.medical_care_plans.filter(status=CarePlan.Status.ACTIVE).first()
+        draft_plan = resident.medical_care_plans.filter(status=CarePlan.Status.DRAFT).first()
+        
+        status_text = 'Active' if active_plan else ('Draft' if draft_plan else 'No Plan')
+        
+        resident_tasks = []
+        if active_plan:
+            for intervention in active_plan.careintervention_set.all():
+                for task in intervention.caretask_set.all():
+                    # For demo purposes, we fetch all tasks. In prod: filter(scheduled_time__date=now.date())
+                    overdue = task.status == 'PENDING' and task.scheduled_time < now
+                    
+                    state = 'Pending'
+                    if task.status == 'COMPLETED':
+                        state = 'Done'
+                    elif task.status == 'MISSED':
+                        state = 'Refused'
+                        
+                    resident_tasks.append({
+                        'id': task.id,
+                        'name': task.task_type,
+                        'due': task.scheduled_time.strftime('%H:%M') if task.scheduled_time else '',
+                        'overdue': overdue,
+                        'state': state
+                    })
+                    total_tasks += 1
+                    if state == 'Done':
+                        completed_tasks += 1
+                        
+        if resident_tasks or active_plan or draft_plan:
+            room_name = resident.bed.room.room_number if hasattr(resident, 'bed') and resident.bed and resident.bed.room else 'Unassigned'
+            tasks_data.append({
+                'resident_name': resident.full_name,
+                'room': room_name,
+                'status': status_text,
+                'has_active_plan': bool(active_plan),
+                'tasks': sorted(resident_tasks, key=lambda x: x['due'])
+            })
+            
+    context = {
+        'active_menu': 'care_planning',
         'residents_tasks': tasks_data,
-        'completed_tasks': 8,
-        'total_tasks': 14,
+        'completed_tasks': completed_tasks,
+        'total_tasks': total_tasks,
     }
     return render(request, 'medical/daily_tasks.html', context)
 
@@ -574,10 +619,16 @@ def update_task_status(request):
         task_id = data.get('task_id')
         new_state = data.get('state')
         
-        # NOTE: Here you would normally fetch the task from the database
-        # e.g., task = Task.objects.get(id=task_id)
-        # task.state = new_state
-        # task.save()
+        task = CareTask.objects.get(id=task_id)
+        if new_state == 'Done':
+            task.status = 'COMPLETED'
+            task.completed_at = timezone.now()
+        elif new_state == 'Refused':
+            task.status = 'MISSED'
+        else:
+            task.status = 'PENDING'
+            
+        task.save()
         
         return JsonResponse({
             'status': 'success', 
@@ -585,6 +636,8 @@ def update_task_status(request):
             'new_state': new_state,
             'message': f'Task {task_id} updated to {new_state} successfully.'
         })
+    except CareTask.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Task not found'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
@@ -592,7 +645,29 @@ def update_task_status(request):
 def save_bedside_vitals(request):
     try:
         data = json.loads(request.body)
-        # Mocking DB save
+        
+        # Determine the user
+        recorded_by = request.user if request.user.is_authenticated else None
+        if not recorded_by:
+            from django.contrib.auth import get_user_model
+            recorded_by = get_user_model().objects.first()
+            
+        resident_id = data.get('resident_id', 1)
+        
+        from apps.medical.models import VitalSign
+            
+        VitalSign.objects.create(
+            resident_id=resident_id,
+            recorded_by=recorded_by,
+            blood_pressure_systolic=data.get('bp_sys'),
+            blood_pressure_diastolic=data.get('bp_dia'),
+            heart_rate_bpm=data.get('hr'),
+            respiratory_rate=data.get('resp'),
+            temperature_fahrenheit=data.get('temp'),
+            spo2_percentage=data.get('spo2'),
+            pain_scale=data.get('pain'),
+            notes=data.get('notes', '')
+        )
         return JsonResponse({
             'status': 'success',
             'message': 'Vitals saved successfully'

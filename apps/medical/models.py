@@ -350,15 +350,21 @@ class VitalSign(models.Model):
 # ==========================================
 class CarePlan(models.Model):
     class Status(models.TextChoices):
-        DRAFT = 'DRAFT', 'Draft'
-        ACTIVE = 'ACTIVE', 'Active'
-        RESOLVED = 'RESOLVED', 'Resolved'
-        DISCONTINUED = 'DISCONTINUED', 'Discontinued'
+        DRAFT = 'draft', 'Draft'
+        PENDING_REVIEW = 'pending_review', 'Pending Review'
+        ACTIVE = 'active', 'Active'
+        REVIEW_DUE = 'review_due', 'Review Due'
+        NEEDS_UPDATE = 'needs_update', 'Needs Update'
+        RESOLVED = 'resolved', 'Resolved'
+        DISCONTINUED = 'discontinued', 'Discontinued'
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     significant_change_flag = models.BooleanField(default=False)
     resident = models.ForeignKey('residents.Resident', on_delete=models.CASCADE, related_name='medical_care_plans')
     is_deleted = models.BooleanField(default=False)
+    last_review_date = models.DateField(null=True, blank=True)
+    next_review_date = models.DateField(null=True, blank=True)
+    assigned_to = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_care_plans')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -547,7 +553,6 @@ class Holiday(models.Model):
 
     class Meta:
         db_table = 'Holidays'
-        managed = False
 
     def __str__(self):
         return f"{self.holiday_name} ({self.holiday_date})"
