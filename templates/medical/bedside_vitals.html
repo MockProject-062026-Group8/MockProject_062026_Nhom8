@@ -55,13 +55,13 @@
                                 <span class="unit">bpm</span>
                             </div>
                         </div>
-                        <div class="form-group half has-error">
-                            <label class="text-danger">SpO2</label>
-                            <div class="input-group-unit abnormal">
-                                <input type="number" name="spo2" value="" placeholder="e.g. 98" class="input-danger">
+                        <div class="form-group half" id="spo2-group">
+                            <label id="spo2-label">SpO2</label>
+                            <div class="input-group-unit" id="spo2-input-group">
+                                <input type="number" name="spo2" id="spo2-input" value="" placeholder="e.g. 98">
                                 <span class="unit">%</span>
                             </div>
-                            <div class="error-msg">Abnormal &mdash; supervising nurse will be notified.</div>
+                            <div class="error-msg" id="spo2-error-msg" style="display: none;">Abnormal &mdash; supervising nurse will be notified.</div>
                         </div>
                     </div>
                     
@@ -105,11 +105,11 @@
                 </div>
             </div>
             
-            <!-- Abnormal Alert Card -->
-            <div class="alert-card-danger">
-                <h4>1 abnormal reading</h4>
-                <p class="text-danger-light">SpO2 88% is below 92% threshold.</p>
-                <p class="text-danger-light">Saving will alert Anna Lee, RN and flag this record.</p>
+            <!-- Abnormal Alert Card (Hidden by default) -->
+            <div class="alert-card-danger" id="abnormal-alert-card" style="display: none;">
+                <h4>Abnormal reading detected!</h4>
+                <p class="text-danger-light" id="abnormal-alert-text"></p>
+                <p class="text-danger-light">Saving will alert the supervising RN and flag this record.</p>
             </div>
         </div>
     </div>
@@ -123,6 +123,46 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var spo2Input = document.getElementById('spo2-input');
+        var spo2Group = document.getElementById('spo2-group');
+        var spo2Label = document.getElementById('spo2-label');
+        var spo2InputGroup = document.getElementById('spo2-input-group');
+        var spo2ErrorMsg = document.getElementById('spo2-error-msg');
+        var abnormalAlertCard = document.getElementById('abnormal-alert-card');
+        var abnormalAlertText = document.getElementById('abnormal-alert-text');
+
+        function checkAbnormal() {
+            var isAbnormal = false;
+            var alertText = "";
+            
+            // Check SpO2
+            if (spo2Input.value !== "" && parseInt(spo2Input.value) < 92) {
+                isAbnormal = true;
+                alertText += `SpO2 ${spo2Input.value}% is below 92% threshold.<br>`;
+                
+                spo2Group.classList.add('has-error');
+                spo2Label.classList.add('text-danger');
+                spo2InputGroup.classList.add('abnormal');
+                spo2Input.classList.add('input-danger');
+                spo2ErrorMsg.style.display = 'block';
+            } else {
+                spo2Group.classList.remove('has-error');
+                spo2Label.classList.remove('text-danger');
+                spo2InputGroup.classList.remove('abnormal');
+                spo2Input.classList.remove('input-danger');
+                spo2ErrorMsg.style.display = 'none';
+            }
+
+            if (isAbnormal) {
+                abnormalAlertText.innerHTML = alertText;
+                abnormalAlertCard.style.display = 'block';
+            } else {
+                abnormalAlertCard.style.display = 'none';
+            }
+        }
+
+        spo2Input.addEventListener('input', checkAbnormal);
+
         var btnSave = document.getElementById('btnSaveVitals');
         if (btnSave) {
             btnSave.addEventListener('click', function() {
@@ -140,10 +180,11 @@
                     body: JSON.stringify({
                         'bp_sys': document.querySelector('input[name="bp_sys"]').value,
                         'bp_dia': document.querySelector('input[name="bp_dia"]').value,
-                        'heart_rate': document.querySelector('input[name="heart_rate"]').value,
+                        'hr': document.querySelector('input[name="heart_rate"]').value,
                         'spo2': document.querySelector('input[name="spo2"]').value,
                         'temp': document.querySelector('input[name="temp"]').value,
-                        'notes': document.querySelector('textarea[name="notes"]').value
+                        'notes': document.querySelector('textarea[name="notes"]').value,
+                        'resident_id': '{{ resident_id }}'
                     })
                 })
                 .then(response => response.json())
@@ -153,12 +194,21 @@
                         btn.classList.replace('btn-primary-blue', 'btn-success');
                         btn.style.backgroundColor = '#10B981'; // Tailwind green-500
                         
+                        // If backend detected abnormal but frontend missed it
+                        if (data.is_abnormal) {
+                            abnormalAlertCard.style.display = 'block';
+                            abnormalAlertText.innerHTML = "Backend detected an abnormal reading! (e.g. BP/HR)";
+                        }
+                        
                         setTimeout(() => {
                             btn.innerText = originalText;
                             btn.disabled = false;
                             btn.style.backgroundColor = '';
                             btn.classList.replace('btn-success', 'btn-primary-blue');
+                            // Optional: redirect or close page
                         }, 2000);
+                    } else {
+                        throw new Error(data.message);
                     }
                 })
                 .catch(error => {

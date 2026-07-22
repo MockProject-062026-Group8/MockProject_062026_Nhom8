@@ -48,11 +48,11 @@
 <div class="tabs-container">
   <ul class="tabs-list">
     <li class="active">Overview</li>
-    <li>Assessments</li>
-    <li>Care Plan</li>
-    <li>eMAR</li>
-    <li>LOC</li>
-    <li>Audit Log</li>
+    <li><a href="#" style="text-decoration: none; color: inherit;">Assessments</a></li>
+    <li><a href="{% url 'care_planning:care_plan_list' %}" style="text-decoration: none; color: inherit;">Care Plan</a></li>
+    <li><a href="#" style="text-decoration: none; color: inherit;">eMAR</a></li>
+    <li><a href="{% url 'medical:loc-history' resident.id %}" style="text-decoration: none; color: inherit;">LOC</a></li>
+    <li><a href="#" style="text-decoration: none; color: inherit;">Audit Log</a></li>
   </ul>
 </div>
 
@@ -211,7 +211,7 @@
         <span class="badge badge-level">{{ resident.residentcarelevelhistory_set.last.care_level.level_name|default:"No Level Set" }}</span>
       </div>
       <p class="text-bold mb-10" style="font-size: 13px; color: #333;">ADL Score: {{ resident.assessment_set.last.adl_total_score|default:"N/A" }} / 32</p>
-      <a href="#" class="loc-link">View LOC History &rarr;</a>
+      <a href="{% url 'medical:loc-history' resident.id %}" class="loc-link">View LOC History &rarr;</a>
     </div>
   </div>
 </div>

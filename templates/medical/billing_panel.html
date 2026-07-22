@@ -31,11 +31,11 @@
     <!-- Patient Info Card -->
     <div class="patient-card mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="patient-name mb-1">John A. Miller</h3>
-            <p class="text-muted mb-0">Room 214 (Semi-private) &middot; Care Plan #CP-1042</p>
+            <h3 class="patient-name mb-1">{{ resident_name }}</h3>
+            <p class="text-muted mb-0">Room {{ room_number }} ({{ room_type }})</p>
         </div>
         <div class="patient-badges">
-            <span class="badge badge-warning badge-outline mr-2">LOC Tier 3 &mdash; High</span>
+            <span class="badge badge-warning badge-outline mr-2">{{ loc_tier_name }}</span>
             <span class="badge badge-success badge-outline">Care Plan: Active</span>
         </div>
     </div>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="stat-content">
                     <p class="stat-label mb-0">Medicare Part A <span class="alert-text ml-2">alert @90</span></p>
-                    <h2 class="stat-value mb-0">Day 62 / 100</h2>
+                    <h2 class="stat-value mb-0">Day {{ days_admitted }} / 100</h2>
                 </div>
             </div>
         </div>
@@ -93,7 +93,7 @@
                     <td><strong>LOC daily rate</strong></td>
                     <td>
                         <span class="badge source-badge badge-blue">AD-06</span>
-                        <span class="text-muted ml-2">LOC Rate Table (Tier 3)</span>
+                        <span class="text-muted ml-2">LOC Rate Table ({{ loc_tier_name }})</span>
                     </td>
                     <td class="text-right"><strong>${{ loc_daily_rate }}</strong></td>
                 </tr>
@@ -101,7 +101,7 @@
                     <td><strong>Room rate</strong></td>
                     <td>
                         <span class="badge source-badge badge-purple-light">AD-05</span>
-                        <span class="text-muted ml-2">Facility &middot; Room 214 (Semi)</span>
+                        <span class="text-muted ml-2">Facility &middot; Room {{ room_number }} ({{ room_type }})</span>
                     </td>
                     <td class="text-right"><strong>${{ room_rate }}</strong></td>
                 </tr>
@@ -133,7 +133,7 @@
 
     <!-- Warning Banner -->
     <div class="warning-banner bottom-banner d-flex justify-content-center align-items-center">
-        <span><strong class="text-warning-dark">Medicare Part A (SNF): Day 62 of 100 covered &middot; alert at Day 90 &middot; coverage locks at Day 100</strong></span>
+        <span><strong class="text-warning-dark">Medicare Part A (SNF): Day {{ days_admitted }} of 100 covered &middot; alert at Day 90 &middot; coverage locks at Day 100</strong></span>
     </div>
 
 </div>

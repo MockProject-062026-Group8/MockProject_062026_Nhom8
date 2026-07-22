@@ -51,12 +51,12 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if item.status == 'Review Due' %}
-                            <span class="badge-status review-due">Review Due</span>
-                        {% elif item.status == 'Needs Update' %}
-                            <span class="badge-status needs-update">Needs Update</span>
-                        {% elif item.status == 'Active' %}
-                            <span class="badge-status active-green">Active</span>
+                        {% if item.status == 'Overdue' %}
+                            <span class="badge-status review-due">Overdue</span>
+                        {% elif item.status == 'Upcoming' %}
+                            <span class="badge-status needs-update">Upcoming</span>
+                        {% else %}
+                            <span class="badge-status active-green">{{ item.status }}</span>
                         {% endif %}
                     </td>
                     <td>

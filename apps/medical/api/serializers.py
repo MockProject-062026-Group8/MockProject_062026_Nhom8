@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.medical.models import ResidentCareLevelHistory
+from apps.medical.models import ResidentCareLevelHistory, LOCClassificationHistory
 
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
@@ -13,18 +13,25 @@ from apps.medical.models import CareLevel, CarePlan, CareGoal
 
 class ResidentCareLevelHistorySerializer(serializers.ModelSerializer):
     actor_name = serializers.SerializerMethodField()
+    date = serializers.DateTimeField(source='action_at')
+    new_tier = serializers.CharField(source='loc_classification.final_loc')
+    previous_tier = serializers.SerializerMethodField()
+    note = serializers.CharField(source='details')
 
     class Meta:
-        model = ResidentCareLevelHistory
+        model = LOCClassificationHistory
         fields = [
             'id', 'date', 'action', 'previous_tier', 
             'new_tier', 'actor_name', 'note'
         ]
 
     def get_actor_name(self, obj):
-        if obj.actor:
-            return obj.actor.get_full_name() or obj.actor.username
+        if obj.action_by:
+            return obj.action_by.get_full_name() or obj.action_by.username
         return "System"
+        
+    def get_previous_tier(self, obj):
+        return ""
 
 
 

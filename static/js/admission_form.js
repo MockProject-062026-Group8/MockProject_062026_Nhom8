@@ -230,8 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return response.json();
     })
     .then(data => {
-      alert('Admission Form confirmed successfully!');
-      window.location.href = `/residents/${residentId}/`;
+      window.location.href = `/medical/initial-assessment/${residentId}/`;
     })
     .catch(error => {
       console.error('Error:', error);

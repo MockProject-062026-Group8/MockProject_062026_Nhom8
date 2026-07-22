@@ -15,22 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
   complianceSuccess.style.display = 'none';
   complianceWarningContainer.style.display = 'none';
 
-  // Helper to get CSRF token
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
+  function getCsrfToken() {
+    const input = document.querySelector('[name=csrfmiddlewaretoken]');
+    return input ? input.value : '';
   }
-  const csrftoken = getCookie('csrftoken');
+  const csrftoken = getCsrfToken();
 
   function getFormData() {
     const clinical_needs = Array.from(document.querySelectorAll('input[name="clinical_needs"]:checked')).map(cb => cb.value);

@@ -272,9 +272,12 @@
     </div>
 
     <!-- Bottom Actions -->
-    <div class="bottom-bar">
+    <div class="bottom-bar" style="display: flex; gap: 10px; align-items: center;">
       <button type="button" class="btn-back" onclick="history.back()">← Back</button>
-      <button type="submit" class="btn-save">Save Assessment → triggers LOC calc</button>
+      <button type="submit" class="btn-save">Save Assessment</button>
+      {% if assessment %}
+        <a href="{% url 'medical:loc_detail' assessment.id %}" style="margin-left: auto; background-color: #2563eb; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">Next: Calculate LOC &rarr;</a>
+      {% endif %}
     </div>
 
   </form>

@@ -1,8 +1,3 @@
-
-"""
-apps/medical/views.py
-SC-022 Initial Assessment - Views
-"""
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -45,7 +40,12 @@ def initial_assessment(request, pk, assessment_id=None):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.resident = resident
-            obj.assessed_by = request.user
+            if request.user.is_authenticated:
+                obj.assessed_by = request.user
+            else:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                obj.assessed_by = User.objects.first()
             if not obj.assessment_date:
                 obj.assessment_date = timezone.now()
             obj.save()
@@ -207,7 +207,6 @@ def api_remove_diagnosis(request, assessment_id, diagnosis_id):
 
 
 # Create your views here.
-
 def reassessments(request):
     """
     SC034 - Reassessments connected to DB
@@ -215,51 +214,62 @@ def reassessments(request):
     from datetime import timedelta
     now = timezone.now().date()
     
-    plans = CarePlan.objects.filter(
-        status__in=[CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE, CarePlan.Status.ACTIVE]
-    ).select_related('resident')
+    from apps.residents.models import Resident
+    from apps.medical.models import Assessment
+    
+    residents = Resident.objects.all()
     
     reassessments_list = []
     total_reassessments = 0
     total_overdue = 0
     
-    for plan in plans:
-        overdue_str = '—'
-        is_overdue = False
-        due_date_str = plan.next_review_date.strftime('%Y-%m-%d') if plan.next_review_date else '—'
+    for resident in residents:
+        latest_assessment = Assessment.objects.filter(resident=resident).order_by('-assessment_date').first()
         
-        if plan.next_review_date and plan.next_review_date < now:
-            days = (now - plan.next_review_date).days
-            overdue_str = f'{days} days'
-            is_overdue = True
-            if plan.status == CarePlan.Status.ACTIVE:
-                plan.status = CarePlan.Status.REVIEW_DUE
-                plan.save()
-                
-        if plan.status in [CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE]:
+        if latest_assessment:
+            last_date = latest_assessment.assessment_date
+        else:
+            # If no assessment, fallback to admission date or resident creation date
+            admission = resident.admission_set.first()
+            last_date = admission.admission_date if admission else resident.created_at
+            
+        if hasattr(last_date, 'date'):
+            last_date = last_date.date()
+            
+        days_since = (now - last_date).days
+        next_due = last_date + timedelta(days=90)
+        
+        # We classify as Overdue if > 90 days, Upcoming if 75-90 days
+        is_overdue = days_since > 90
+        is_upcoming = 75 <= days_since <= 90
+        
+        if is_overdue or is_upcoming:
             total_reassessments += 1
             if is_overdue:
                 total_overdue += 1
                 
-        trigger = '90-day cycle' if not plan.significant_change_flag else 'Significant Change (SCS)'
-        action = 'Start' if plan.status in [CarePlan.Status.REVIEW_DUE, CarePlan.Status.NEEDS_UPDATE] else 'View'
-        
-        room_name = plan.resident.bed.room.room_number if hasattr(plan.resident, 'bed') and plan.resident.bed and plan.resident.bed.room else 'Unassigned'
-        
-        reassessments_list.append({
-            'id': plan.id,
-            'resident': plan.resident.full_name,
-            'room': room_name,
-            'trigger': trigger,
-            'due_date': due_date_str,
-            'overdue': overdue_str,
-            'status': plan.get_status_display(),
-            'action': action,
-            'is_escalated': is_overdue and plan.next_review_date and (now - plan.next_review_date).days > 3,
-        })
+            trigger = '90-day cycle'
+            action = 'Start'
+            
+            room_name = resident.room_number
+            
+            due_date_str = next_due.strftime('%Y-%m-%d')
+            overdue_str = f'{days_since - 90} days' if is_overdue else '-'
+            
+            reassessments_list.append({
+                'id': resident.id,
+                'resident': resident.full_name,
+                'room': room_name,
+                'trigger': trigger,
+                'due_date': due_date_str,
+                'overdue': overdue_str,
+                'status': 'Overdue' if is_overdue else 'Upcoming',
+                'action': action,
+                'is_escalated': is_overdue and (days_since - 90) > 3,
+            })
 
-    reassessments_list.sort(key=lambda x: (x['action'] == 'View', not x['is_escalated']))
-
+    reassessments_list.sort(key=lambda x: (x['status'] == 'Upcoming', not x['is_escalated']))
+    
     context = {
         'active_menu': 'care_planning',
         'reassessments_list': reassessments_list,
@@ -268,25 +278,10 @@ def reassessments(request):
     }
     return render(request, 'medical/reassessments.html', context)
 
-
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-import json
-
 @require_POST
 def start_reassessment(request):
     try:
         data = json.loads(request.body)
-        plan_id = data.get('plan_id')
-        
-        plan = CarePlan.objects.get(id=plan_id)
-        from .models import Assessment
-        
-        Assessment.objects.create(
-            resident=plan.resident,
-            assessment_type='periodic' if not plan.significant_change_flag else 'change_of_condition',
-            status='draft'
-        )
         
         return JsonResponse({
             'status': 'success',
@@ -530,21 +525,24 @@ class CareGoalDetailView(generics.RetrieveUpdateDestroyAPIView):
 def bedside_vitals(request):
     """
     SC033 - Bedside Vitals (Ghi nhận Sinh hiệu tại giường)
-    Connected to DB for SC033
     """
-    resident = Resident.objects.first()
-    task = CareTask.objects.filter(status='PENDING').first()
+    resident_id = request.GET.get('resident_id', 1)
+    from django.shortcuts import get_object_or_404
+    resident = get_object_or_404(Resident, pk=resident_id)
+    
+    task_id = request.GET.get('task_id')
+    task = CareTask.objects.filter(pk=task_id).first() if task_id else None
     now = timezone.now()
     
     context = {
         'active_menu': 'care_planning',
-        'resident_name': resident.full_name if resident else 'Robert Hayes',
-        'room_number': resident.bed.room.room_number if resident and hasattr(resident, 'bed') and resident.bed and resident.bed.room else 'Room 204B',
+        'resident_name': resident.full_name,
+        'room_number': resident.room_number,
         'task_name': task.task_type if task else 'Vitals check',
-        'due_time': f"due {task.scheduled_time.strftime('%H:%M')}" if task and task.scheduled_time else 'due 14:00',
-        'recorder_name': request.user.get_full_name() if request.user.is_authenticated else 'Marcus Rivera, CNA',
+        'due_time': f"due {task.scheduled_time.strftime('%H:%M')}" if task and task.scheduled_time else f"due {now.strftime('%H:%M')}",
+        'recorder_name': request.user.get_full_name() if request.user.is_authenticated else 'System',
         'recorder_time': now.strftime('%Y-%m-%d %H:%M'),
-        'resident_id': resident.id if resident else 1
+        'resident_id': resident.id
     }
     return render(request, 'medical/bedside_vitals.html', context)
 
@@ -572,30 +570,61 @@ def daily_tasks(request):
         
         resident_tasks = []
         if active_plan:
-            for intervention in active_plan.careintervention_set.all():
-                for task in intervention.caretask_set.all():
-                    # For demo purposes, we fetch all tasks. In prod: filter(scheduled_time__date=now.date())
-                    overdue = task.status == 'PENDING' and task.scheduled_time < now
+            # 1. Fetch today's tasks
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+            
+            from apps.medical.models import CareIntervention
+            interventions = list(active_plan.careintervention_set.all())
+            if not interventions:
+                intervention = CareIntervention.objects.create(assigned_role='CNA', care_plan=active_plan)
+                interventions.append(intervention)
+                
+            tasks = CareTask.objects.filter(care_intervention__in=interventions, scheduled_time__range=(today_start, today_end))
+            
+            if not tasks.exists():
+                goals = active_plan.goals.all()
+                if not goals:
+                    CareTask.objects.create(
+                        task_type="Daily Check", 
+                        care_intervention=interventions[0], 
+                        scheduled_time=now.replace(hour=10, minute=0, second=0)
+                    )
+                else:
+                    for idx, goal in enumerate(goals):
+                        hour = 8 + (idx * 2) % 10
+                        task_name = goal.task or goal.goal or "Care Task"
+                        if len(task_name) > 50:
+                            task_name = task_name[:47] + '...'
+                        CareTask.objects.create(
+                            task_type=task_name,
+                            care_intervention=interventions[0],
+                            scheduled_time=now.replace(hour=hour, minute=0, second=0)
+                        )
+                tasks = CareTask.objects.filter(care_intervention__in=interventions, scheduled_time__range=(today_start, today_end))
+
+            for task in tasks:
+                overdue = task.status == 'PENDING' and task.scheduled_time < now
+                
+                state = 'Pending'
+                if task.status == 'COMPLETED':
+                    state = 'Done'
+                elif task.status == 'MISSED':
+                    state = 'Refused'
                     
-                    state = 'Pending'
-                    if task.status == 'COMPLETED':
-                        state = 'Done'
-                    elif task.status == 'MISSED':
-                        state = 'Refused'
-                        
-                    resident_tasks.append({
-                        'id': task.id,
-                        'name': task.task_type,
-                        'due': task.scheduled_time.strftime('%H:%M') if task.scheduled_time else '',
-                        'overdue': overdue,
-                        'state': state
-                    })
-                    total_tasks += 1
-                    if state == 'Done':
-                        completed_tasks += 1
+                resident_tasks.append({
+                    'id': task.id,
+                    'name': task.task_type,
+                    'due': task.scheduled_time.strftime('%H:%M') if task.scheduled_time else '',
+                    'overdue': overdue,
+                    'state': state
+                })
+                total_tasks += 1
+                if state == 'Done':
+                    completed_tasks += 1
                         
         if resident_tasks or active_plan or draft_plan:
-            room_name = resident.bed.room.room_number if hasattr(resident, 'bed') and resident.bed and resident.bed.room else 'Unassigned'
+            room_name = resident.room_number
             tasks_data.append({
                 'resident_name': resident.full_name,
                 'room': room_name,
@@ -646,31 +675,60 @@ def save_bedside_vitals(request):
     try:
         data = json.loads(request.body)
         
-        # Determine the user
+        from apps.accounts.models import User
         recorded_by = request.user if request.user.is_authenticated else None
-        if not recorded_by:
-            from django.contrib.auth import get_user_model
-            recorded_by = get_user_model().objects.first()
+        
+        valid_user = None
+        if recorded_by and hasattr(recorded_by, 'id'):
+            valid_user = User.objects.filter(id=recorded_by.id).first()
+            
+        if not valid_user:
+            valid_user = User.objects.first()
+            
+        recorded_by_id = valid_user.id if valid_user else None
             
         resident_id = data.get('resident_id', 1)
+        
+        bp_sys = data.get('bp_sys') or None
+        bp_dia = data.get('bp_dia') or None
+        hr = data.get('hr') or None
+        resp = data.get('resp') or None
+        temp = data.get('temp') or None
+        spo2 = data.get('spo2') or None
+        pain = data.get('pain') or None
+        
+        bp_sys_val = float(bp_sys) if bp_sys else None
+        hr_val = float(hr) if hr else None
+        spo2_val = float(spo2) if spo2 else None
+        
+        is_abnormal = False
+        if bp_sys_val and (bp_sys_val > 140 or bp_sys_val < 90): is_abnormal = True
+        if hr_val and (hr_val > 100 or hr_val < 60): is_abnormal = True
+        if spo2_val and (spo2_val < 92): is_abnormal = True
         
         from apps.medical.models import VitalSign
             
         VitalSign.objects.create(
             resident_id=resident_id,
-            recorded_by=recorded_by,
-            blood_pressure_systolic=data.get('bp_sys'),
-            blood_pressure_diastolic=data.get('bp_dia'),
-            heart_rate_bpm=data.get('hr'),
-            respiratory_rate=data.get('resp'),
-            temperature_fahrenheit=data.get('temp'),
-            spo2_percentage=data.get('spo2'),
-            pain_scale=data.get('pain'),
+            recorded_by_id=recorded_by_id,
+            blood_pressure_systolic=bp_sys,
+            blood_pressure_diastolic=bp_dia,
+            heart_rate_bpm=hr,
+            respiratory_rate=resp,
+            temperature_fahrenheit=temp,
+            spo2_percentage=spo2,
+            pain_scale=pain,
             notes=data.get('notes', '')
         )
+        
+        message = 'Vitals saved successfully'
+        if is_abnormal:
+            message += ' - WARNING: Abnormal vitals detected!'
+            
         return JsonResponse({
             'status': 'success',
-            'message': 'Vitals saved successfully'
+            'message': message,
+            'is_abnormal': is_abnormal
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

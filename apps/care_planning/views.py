@@ -99,52 +99,74 @@ def care_plan_create_page(request):
     # =====================
     # DISPLAY PAGE (GET) & HOLIDAY CHECK LOGIC
     # =====================
+    resident_id = request.GET.get("resident_id", 1)
+    from django.shortcuts import get_object_or_404
+    from apps.residents.models import Resident
+    from apps.medical.models import LOCClassification, Assessment, AssessmentDetail, Holiday
+    
+    resident = get_object_or_404(Resident, pk=resident_id)
+    
+    # 1. Fetch Room Info
+    room_name = resident.room_number
+    
+    # 2. Fetch LOC Tier
+    latest_loc = LOCClassification.objects.filter(
+        assessment__resident=resident, 
+        status=LOCClassification.Status.CONFIRMED
+    ).order_by('-confirmed_at').first()
+    
+    loc_tier_name = latest_loc.final_loc if latest_loc and latest_loc.final_loc else "Not Classified"
+    
+    # Costs
+    loc_rate = 248.00 if latest_loc else 0.00
+    room_rate = 185.00
+    estimated_daily = loc_rate + room_rate
+    estimated_monthly = estimated_daily * 30
+
     review_date_input = request.GET.get("review_date", "2026-09-02")
     try:
         target_date = datetime.strptime(review_date_input, "%Y-%m-%d").date()
     except ValueError:
         target_date = date(2026, 9, 2)
 
-    # Đã map db_column='HolidayDate' chuẩn trong model -> Query trực tiếp cực ngắn gọn
-    # Query kiểm tra trùng ngày lễ từ SQL Server
     is_holiday_conflict = Holiday.objects.filter(holiday_date=target_date).exists()
 
-    care_areas = [
-        {
-            "name": "Mobility",
-            "suggested": True,
-            "goal": "Resident will ambulate 50 ft with walker x2/day by 2026-07-30.",
-            "measure": "Distance log",
-            "target": "2026-07-30",
-            "task": "Assist ambulation with front-wheel walker, twice daily."
-        },
-        {
-            "name": "Skin Integrity",
-            "suggested": True,
-            "goal": "Maintain skin integrity.",
-            "measure": "Braden score",
-            "target": "2026-10-07",
-            "task": "Reposition every 2 hours."
-        },
-        {
-            "name": "Nutrition",
-            "suggested": False,
-            "goal": "Maintain hydration ≥1500 ml/day.",
-            "measure": "I/O log",
-            "target": "Ongoing",
-            "task": "Monitor daily fluid intake."
-        }
-    ]
+    care_areas = []
+    latest_assessment = Assessment.objects.filter(resident=resident).order_by('-assessment_date').first()
+    if latest_assessment:
+        details = AssessmentDetail.objects.filter(assessment=latest_assessment, category='adl')
+        for detail in details:
+            if detail.score is not None and detail.score >= 3:
+                care_areas.append({
+                    "name": detail.item_name,
+                    "suggested": True,
+                    "goal": f"Maintain or improve {detail.item_name.lower()} ability.",
+                    "measure": "Observation log",
+                    "target": target_date.strftime("%Y-%m-%d"),
+                    "task": f"Assist with {detail.item_name.lower()} daily."
+                })
+
+    if not care_areas:
+        care_areas = [
+            {
+                "name": "General Wellness",
+                "suggested": True,
+                "goal": "Maintain overall health and safety.",
+                "measure": "Daily monitoring",
+                "target": target_date.strftime("%Y-%m-%d"),
+                "task": "Monitor vitals and general wellbeing."
+            }
+        ]
 
     context = {
-        "resident_id": 1,
-        "resident_name": "Robert Hayes",
-        "room": "204B",
-        "loc_tier": "LOC Tier 3",
-        "loc_rate": 248.00,
-        "room_rate": 185.00,
-        "estimated_daily": 433.00,
-        "estimated_monthly": 13163.00,
+        "resident_id": resident.id,
+        "resident_name": resident.full_name,
+        "room": room_name,
+        "loc_tier": loc_tier_name,
+        "loc_rate": loc_rate,
+        "room_rate": room_rate,
+        "estimated_daily": estimated_daily,
+        "estimated_monthly": estimated_monthly,
         "is_holiday_conflict": is_holiday_conflict,
         "care_areas": care_areas
     }
@@ -337,12 +359,17 @@ def reject_care_plan(request, pk=None):
 def care_plan_ack(request):
     """
     SC036 - Care Plan Acknowledgment
-    Connected to DB for SC036
     """
-    plan = CarePlan.objects.filter(status=CarePlan.Status.PENDING_REVIEW).first()
-    if not plan:
-        plan = CarePlan.objects.first()
-        
+    from django.shortcuts import get_object_or_404
+    plan_id = request.GET.get('plan_id')
+    
+    if plan_id:
+        plan = get_object_or_404(CarePlan, pk=plan_id)
+    else:
+        plan = CarePlan.objects.filter(status=CarePlan.Status.PENDING_REVIEW).first()
+        if not plan:
+            plan = CarePlan.objects.first()
+            
     goals_data = []
     if plan:
         for goal in plan.goals.all():
@@ -363,35 +390,50 @@ def care_plan_ack(request):
                 'status_class': status_class
             })
             
+    physician_name = 'Dr. Alan Cho, MD'
+    physician_license = 'CA-MD-88231'
+    physician_npi = '1720493857'
+    
+    if plan and hasattr(plan.resident, 'admission_set'):
+        admission = plan.resident.admission_set.first()
+        if admission and admission.admitting_physician:
+            physician_name = f"Dr. {admission.admitting_physician.first_name} {admission.admitting_physician.last_name}, MD"
+            physician_license = admission.admitting_physician.license_number or physician_license
+            physician_npi = admission.admitting_physician.npi or physician_npi
+            
+    dietary_name = 'Grace Liu, RD'
+    from apps.accounts.models import User
+    dietary_user = User.objects.filter(role__role_name__icontains='Dietary').first()
+    if not dietary_user:
+        # Fallback to a Nurse or DON if Dietary role doesn't exist in DB
+        dietary_user = User.objects.filter(role__role_name__icontains='DON').first()
+        if not dietary_user:
+            dietary_user = User.objects.filter(role__role_name__icontains='Nurse').first()
+            
+    if dietary_user:
+        dietary_name = f"{dietary_user.first_name} {dietary_user.last_name}, {dietary_user.role.role_name.split(' ')[0]}"
+        
     context = {
         'active_menu': 'pending_ack',
         
         # Patient & Form info
-        'patient_name': plan.resident.full_name if plan else 'Robert Hayes',
-        'submitted_by': plan.assigned_to.get_full_name() if plan and hasattr(plan, 'assigned_to') and plan.assigned_to else 'Anna Lee, RN',
-        'status': plan.get_status_display() if plan else 'Pending Review',
-        'submit_date': plan.created_at.strftime('%Y-%m-%d') if plan else '2026-07-02',
+        'patient_name': plan.resident.full_name if plan else 'Unknown',
+        'submitted_by': f"{plan.assigned_to.first_name} {plan.assigned_to.last_name}" if plan and getattr(plan, 'assigned_to', None) else 'System User',
+        'status': plan.get_status_display() if plan else 'Unknown',
+        'submit_date': getattr(plan, 'created_at', timezone.now()).strftime('%Y-%m-%d') if plan else 'Unknown',
         
         # Goals List
-        'goals': goals_data or [
-            {
-                'title': 'Mobility',
-                'description': 'Goal: Ambulate 50 ft with walker x2/day.',
-                'task': 'Assist ambulation w/ walker, 2x daily.',
-                'status_badge': 'On Track',
-                'status_class': 'badge-success-outline'
-            }
-        ],
+        'goals': goals_data or [],
         
         # Role Info
-        'physician_name': 'Dr. Alan Cho, MD',
-        'license': 'CA-MD-88231',
-        'npi': '1720493857',
+        'physician_name': physician_name,
+        'license': physician_license,
+        'npi': physician_npi,
         
         # IDT Acknowledgment Info
-        'dietary_name': 'Grace Liu, RD',
+        'dietary_name': dietary_name,
         'dietary_status': 'Signed',
-        'dietary_date': '2026-07-02 15:30'
+        'dietary_date': getattr(plan, 'created_at', timezone.now()).strftime('%Y-%m-%d %H:%M') if plan else 'Unknown'
     }
     
     return render(request, 'medical/care_plan_ack.html', context)
