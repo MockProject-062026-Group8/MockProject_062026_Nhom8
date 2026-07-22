@@ -1,6 +1,18 @@
 import re
 from rest_framework import serializers
 
+class OTPVerifySerializer(serializers.Serializer):
+    verification_token = serializers.CharField(required=True)
+    otp_code = serializers.CharField(required=True)
+
+    def validate_otp_code(self, value):
+        if not re.fullmatch(r'^\d{6}$', value):
+            raise serializers.ValidationError("OTP code must contain exactly 6 digits.")
+        return value
+
+class OTPResendSerializer(serializers.Serializer):
+    verification_token = serializers.CharField(required=True)
+
 class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField(required=True, allow_blank=False, max_length=255)
     password = serializers.CharField(required=True, allow_blank=False, trim_whitespace=False, write_only=True)

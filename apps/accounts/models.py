@@ -81,6 +81,16 @@ class AuditLog(models.Model):
     class Meta:
         db_table = 'audit_logs'
 
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otps')
+    otp_hash = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+    is_consumed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'otps'
+
 class PhiAccessLog(models.Model):
     class AccessType(models.TextChoices):
         VIEW = 'VIEW', 'View'
