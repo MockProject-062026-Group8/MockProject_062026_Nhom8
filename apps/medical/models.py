@@ -558,7 +558,6 @@ class Holiday(models.Model):
 
     class Meta:
         db_table = 'Holidays'
-        managed = False
 
     def __str__(self):
         return f"{self.holiday_name} ({self.holiday_date})"

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 from django.db.models import Count, Q
-from apps.medical.models import CarePlan
+from apps.medical.models import CarePlan, CareGoal, Holiday
 
 class CarePlanListView(ListView):
     model = CarePlan
@@ -59,7 +59,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from apps.medical.models import CareGoal, Holiday
 
 def care_plan_create_page(request):
 
@@ -72,6 +71,11 @@ def care_plan_create_page(request):
 
         status = CarePlan.Status.DRAFT if action == "save_draft" else CarePlan.Status.PENDING_REVIEW
 
+        # 1. Tạo Care Plan
+        # Sử dụng DRAFT hoặc ACTIVE để khớp 100% với STATUS_CHOICES trong models.py
+        status = "DRAFT" if action == "save_draft" else "ACTIVE"
+
+        # 1. Tạo Care Plan trong DB SQL Server
         care_plan = CarePlan.objects.create(
             resident_id=resident_id,
             status=status,
@@ -333,37 +337,47 @@ def reject_care_plan(request, pk=None):
 def care_plan_ack(request):
     """
     SC036 - Care Plan Acknowledgment
-    Dummy data based on Figma mockup
+    Connected to DB for SC036
     """
+    plan = CarePlan.objects.filter(status=CarePlan.Status.PENDING_REVIEW).first()
+    if not plan:
+        plan = CarePlan.objects.first()
+        
+    goals_data = []
+    if plan:
+        for goal in plan.goals.all():
+            status_badge = 'On Track'
+            status_class = 'badge-success-outline'
+            if goal.status == 'NOT_MET':
+                status_badge = 'At Risk'
+                status_class = 'badge-warning-outline'
+            elif goal.status == 'IN_PROGRESS':
+                status_badge = 'In Progress'
+                status_class = 'badge-primary-outline'
+                
+            goals_data.append({
+                'title': goal.goal[:20] + '...' if goal.goal and len(goal.goal) > 20 else (goal.goal or 'Goal'),
+                'description': f"Goal: {goal.goal}",
+                'task': goal.task,
+                'status_badge': status_badge,
+                'status_class': status_class
+            })
+            
     context = {
         'active_menu': 'pending_ack',
         
         # Patient & Form info
-        'patient_name': 'Robert Hayes',
-        'submitted_by': 'Anna Lee, RN',
-        'status': 'Pending Review',
-        'submit_date': '2026-07-02',
+        'patient_name': plan.resident.full_name if plan else 'Robert Hayes',
+        'submitted_by': plan.assigned_to.get_full_name() if plan and hasattr(plan, 'assigned_to') and plan.assigned_to else 'Anna Lee, RN',
+        'status': plan.get_status_display() if plan else 'Pending Review',
+        'submit_date': plan.created_at.strftime('%Y-%m-%d') if plan else '2026-07-02',
         
         # Goals List
-        'goals': [
+        'goals': goals_data or [
             {
                 'title': 'Mobility',
                 'description': 'Goal: Ambulate 50 ft with walker x2/day.',
                 'task': 'Assist ambulation w/ walker, 2x daily.',
-                'status_badge': 'On Track',
-                'status_class': 'badge-success-outline'
-            },
-            {
-                'title': 'Skin Integrity',
-                'description': 'Goal: Maintain skin integrity (no stage-2 injury).',
-                'task': 'Reposition q2h; skin check each shift.',
-                'status_badge': 'At Risk',
-                'status_class': 'badge-warning-outline'
-            },
-            {
-                'title': 'Nutrition',
-                'description': 'Goal: Maintain fluid intake ≥ 1500 mL/day.',
-                'task': 'Monitor fluid intake; document I/O.',
                 'status_badge': 'On Track',
                 'status_class': 'badge-success-outline'
             }
