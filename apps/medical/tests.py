@@ -11,10 +11,9 @@ class LOCClassificationTests(TestCase):
         self.user = User.objects.create_user(username='nurse', password='password')
         self.resident = Resident.objects.create(
             resident_id='RES_TEST',
-            full_name='Test Resident',
-            room_number='101',
-            date_of_birth='1950-01-01',
-            admission_date='2025-01-01'
+            first_name='Test',
+            last_name='Resident',
+            date_of_birth='1950-01-01'
         )
         self.assessment = Assessment.objects.create(
             resident=self.resident,
