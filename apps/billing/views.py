@@ -35,13 +35,8 @@ def billing_panel(request):
     loc_daily_rate = float(loc_rate_obj.daily_rate) if loc_rate_obj else 150.00
     
     # 4. Get Room Rate
-    room_rate = 140.00 # Default
     room = resident.bed.room if hasattr(resident, 'bed') and resident.bed else None
-    if room:
-        if 'PRIVATE' in room.room_type and 'SEMI' not in room.room_type:
-            room_rate = 200.00
-        elif 'SEMI_PRIVATE' in room.room_type:
-            room_rate = 140.00
+    room_rate = float(room.base_rate) if room else 140.00
             
     room_type_display = room.room_type.replace('_', '-').title() if room else "N/A"
             

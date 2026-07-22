@@ -31,11 +31,11 @@
     <!-- Patient Info Card -->
     <div class="patient-card mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="patient-name mb-1">{{ resident_name }}</h3>
-            <p class="text-muted mb-0">Room {{ room_number }} ({{ room_type }})</p>
+            <h3 class="patient-name mb-1" id="resident_name">Loading...</h3>
+            <p class="text-muted mb-0">Room <span id="room_number"></span> (<span id="room_type"></span>)</p>
         </div>
         <div class="patient-badges">
-            <span class="badge badge-warning badge-outline mr-2">{{ loc_tier_name }}</span>
+            <span class="badge badge-warning badge-outline mr-2" id="loc_tier_name">Loading...</span>
             <span class="badge badge-success badge-outline">Care Plan: Active</span>
         </div>
     </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="stat-content">
                     <p class="stat-label mb-0">Estimated / day</p>
-                    <h2 class="stat-value mb-0">${{ estimated_day }}</h2>
+                    <h2 class="stat-value mb-0">$<span id="estimated_day">0.00</span></h2>
                 </div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </div>
                 <div class="stat-content">
                     <p class="stat-label mb-0">Estimated / month</p>
-                    <h2 class="stat-value mb-0">${{ estimated_month }}</h2>
+                    <h2 class="stat-value mb-0">$<span id="estimated_month">0.00</span></h2>
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="stat-content">
                     <p class="stat-label mb-0">Medicare Part A <span class="alert-text ml-2">alert @90</span></p>
-                    <h2 class="stat-value mb-0">Day {{ days_admitted }} / 100</h2>
+                    <h2 class="stat-value mb-0">Day <span id="days_admitted">0</span> / 100</h2>
                 </div>
             </div>
         </div>
@@ -93,17 +93,17 @@
                     <td><strong>LOC daily rate</strong></td>
                     <td>
                         <span class="badge source-badge badge-blue">AD-06</span>
-                        <span class="text-muted ml-2">LOC Rate Table ({{ loc_tier_name }})</span>
+                        <span class="text-muted ml-2">LOC Rate Table (<span id="loc_tier_name_td"></span>)</span>
                     </td>
-                    <td class="text-right"><strong>${{ loc_daily_rate }}</strong></td>
+                    <td class="text-right"><strong>$<span id="loc_daily_rate">0.00</span></strong></td>
                 </tr>
                 <tr>
                     <td><strong>Room rate</strong></td>
                     <td>
                         <span class="badge source-badge badge-purple-light">AD-05</span>
-                        <span class="text-muted ml-2">Facility &middot; Room {{ room_number }} ({{ room_type }})</span>
+                        <span class="text-muted ml-2">Facility &middot; Room <span id="room_number_td"></span> (<span id="room_type_td"></span>)</span>
                     </td>
-                    <td class="text-right"><strong>${{ room_rate }}</strong></td>
+                    <td class="text-right"><strong>$<span id="room_rate">0.00</span></strong></td>
                 </tr>
                 <tr>
                     <td><strong>Medication (est.)</strong></td>
@@ -111,21 +111,21 @@
                         <span class="badge source-badge badge-gray">eMAR</span>
                         <span class="text-muted ml-2">Pharmacy &mdash; simulated</span>
                     </td>
-                    <td class="text-right"><strong>${{ medication_est }}</strong></td>
+                    <td class="text-right"><strong>$<span id="medication_est">0.00</span></strong></td>
                 </tr>
                 <tr class="subtotal-row">
                     <td><strong>Subtotal per day</strong></td>
                     <td></td>
-                    <td class="text-right text-primary"><strong>${{ subtotal_per_day }}</strong></td>
+                    <td class="text-right text-primary"><strong>$<span id="subtotal_per_day">0.00</span></strong></td>
                 </tr>
                 <!-- Holiday Surcharge Row -->
                 <tr class="holiday-row">
                     <td><strong class="text-danger">Holiday Surcharge (est.)</strong></td>
                     <td>
                         <span class="badge source-badge badge-red">CR-HOL</span>
-                        <span class="text-muted ml-2">US Holidays ({{ holiday_days }} day)</span>
+                        <span class="text-muted ml-2">US Holidays (<span id="holiday_days">0</span> day)</span>
                     </td>
-                    <td class="text-right text-danger"><strong>+${{ total_holiday_surcharge }} / mo</strong></td>
+                    <td class="text-right text-danger"><strong>+$<span id="total_holiday_surcharge">0.00</span> / mo</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -133,8 +133,47 @@
 
     <!-- Warning Banner -->
     <div class="warning-banner bottom-banner d-flex justify-content-center align-items-center">
-        <span><strong class="text-warning-dark">Medicare Part A (SNF): Day {{ days_admitted }} of 100 covered &middot; alert at Day 90 &middot; coverage locks at Day 100</strong></span>
+        <span><strong class="text-warning-dark">Medicare Part A (SNF): Day <span id="days_admitted_banner">0</span> of 100 covered &middot; alert at Day 90 &middot; coverage locks at Day 100</strong></span>
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const residentId = urlParams.get('resident_id') || 1;
+    
+    fetch(`/api/v1/billing/cost-billing/?resident_id=${residentId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('resident_name').textContent = data.resident_name;
+            document.getElementById('room_number').textContent = data.room_number;
+            document.getElementById('room_type').textContent = data.room_type;
+            document.getElementById('loc_tier_name').textContent = data.loc_tier_name;
+            
+            document.getElementById('estimated_day').textContent = data.estimated_day;
+            document.getElementById('estimated_month').textContent = data.estimated_month;
+            document.getElementById('days_admitted').textContent = data.days_admitted;
+            
+            document.getElementById('loc_tier_name_td').textContent = data.loc_tier_name;
+            document.getElementById('loc_daily_rate').textContent = data.loc_daily_rate;
+            
+            document.getElementById('room_number_td').textContent = data.room_number;
+            document.getElementById('room_type_td').textContent = data.room_type;
+            document.getElementById('room_rate').textContent = data.room_rate;
+            
+            document.getElementById('medication_est').textContent = data.medication_est;
+            document.getElementById('subtotal_per_day').textContent = data.subtotal_per_day;
+            
+            document.getElementById('holiday_days').textContent = data.holiday_days;
+            document.getElementById('total_holiday_surcharge').textContent = data.total_holiday_surcharge;
+            
+            document.getElementById('days_admitted_banner').textContent = data.days_admitted;
+        })
+        .catch(error => {
+            console.error('Error fetching billing data:', error);
+            document.getElementById('resident_name').textContent = 'Error loading data';
+        });
+});
+</script>
 {% endblock %}

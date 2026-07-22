@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block breadcrumb %}
-    &gt; Pending Acknowledgment &gt; {{ patient_name }}
+    &gt; Pending Acknowledgment &gt; <span id="breadcrumb_patient_name">Loading...</span>
 {% endblock %}
 
 {% block content %}
@@ -16,9 +16,9 @@
     
     <!-- Header Section -->
     <div class="mb-4">
-        <h1 class="page-title mb-1" style="font-size: 24px; font-weight: 700; color: #0F172A;">Care Plan Acknowledgment &mdash; {{ patient_name }}</h1>
+        <h1 class="page-title mb-1" style="font-size: 24px; font-weight: 700; color: #0F172A;">Care Plan Acknowledgment &mdash; <span id="header_patient_name">Loading...</span></h1>
         <div class="text-muted" style="font-size: 14px;">
-            Submitted by {{ submitted_by }} &bull; {{ status }} &bull; {{ submit_date }}
+            Submitted by <span id="submitted_by"></span> &bull; <span id="status"></span> &bull; <span id="submit_date"></span>
         </div>
     </div>
 
@@ -35,22 +35,9 @@
             </div>
 
             <!-- Goals List -->
-            <div class="goals-list" style="display: flex; flex-direction: column; gap: 16px;">
-                {% for goal in goals %}
-                <div class="goal-card" style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #0F172A; margin: 0;">{{ goal.title }}</h3>
-                        <span class="badge {{ goal.status_class }}" style="font-size: 12px; border: 1px solid currentColor; background: transparent; padding: 4px 10px; border-radius: 999px;">{{ goal.status_badge }}</span>
-                    </div>
-                    <p style="font-size: 14px; color: #475569; margin: 0 0 12px 0;">{{ goal.description }}</p>
-                    <ul style="list-style-type: none; padding-left: 0; margin: 0;">
-                        <li style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px;">
-                            <span style="display: inline-block; width: 6px; height: 6px; background-color: #3B82F6; border-radius: 50%;"></span>
-                            {{ goal.task }}
-                        </li>
-                    </ul>
-                </div>
-                {% endfor %}
+            <div class="goals-list" id="goals-container" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- JS will populate goals here -->
+                <div style="color: #64748B; font-size: 14px;">Loading goals...</div>
             </div>
 
         </div>
@@ -63,8 +50,8 @@
                 <h3 style="font-size: 16px; font-weight: 600; color: #0F172A; margin: 0 0 12px 0;">Your Role</h3>
                 <div style="font-weight: 600; font-size: 14px; color: #1E293B; margin-bottom: 4px;">Physician (Attending)</div>
                 <div style="font-size: 12px; color: #64748B;">
-                    {{ physician_name }} &bull; {{ license }}<br>
-                    NPI {{ npi }}
+                    <span id="physician_name"></span> &bull; <span id="physician_license"></span><br>
+                    NPI <span id="physician_npi"></span>
                 </div>
             </div>
 
@@ -83,11 +70,11 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div>
                             <div style="font-weight: 600; color: #1E293B;">Dietary</div>
-                            <div style="font-weight: 600; color: #1E293B;">{{ dietary_name }}</div>
+                            <div style="font-weight: 600; color: #1E293B;" id="dietary_name"></div>
                         </div>
                         <div style="text-align: right;">
-                            <span class="badge" style="background-color: #DCFCE7; color: #166534; font-size: 12px; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 2px;">{{ dietary_status }}</span>
-                            <div style="color: #94A3B8; font-size: 10px;">{{ dietary_date }}</div>
+                            <span class="badge" id="dietary_status" style="background-color: #DCFCE7; color: #166534; font-size: 12px; padding: 4px 10px; border-radius: 999px; display: inline-block; margin-bottom: 2px;"></span>
+                            <div style="color: #94A3B8; font-size: 10px;" id="dietary_date"></div>
                         </div>
                     </div>
                 </div>
@@ -97,4 +84,64 @@
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('plan_id') || '';
+    const apiUrl = planId ? `/api/v1/care-planning/ack/?plan_id=${planId}` : '/api/v1/care-planning/ack/';
+    
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            // Header Info
+            document.getElementById('breadcrumb_patient_name').textContent = data.patient_name;
+            document.getElementById('header_patient_name').textContent = data.patient_name;
+            document.getElementById('submitted_by').textContent = data.submitted_by;
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('submit_date').textContent = data.submit_date;
+            
+            // Goals
+            const goalsContainer = document.getElementById('goals-container');
+            goalsContainer.innerHTML = ''; // clear loading text
+            
+            if (data.goals && data.goals.length > 0) {
+                data.goals.forEach(goal => {
+                    const goalHtml = `
+                        <div class="goal-card" style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <h3 style="font-size: 16px; font-weight: 600; color: #0F172A; margin: 0;">${goal.title}</h3>
+                                <span class="badge ${goal.status_class}" style="font-size: 12px; border: 1px solid currentColor; background: transparent; padding: 4px 10px; border-radius: 999px;">${goal.status_badge}</span>
+                            </div>
+                            <p style="font-size: 14px; color: #475569; margin: 0 0 12px 0;">${goal.description}</p>
+                            <ul style="list-style-type: none; padding-left: 0; margin: 0;">
+                                <li style="font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px;">
+                                    <span style="display: inline-block; width: 6px; height: 6px; background-color: #3B82F6; border-radius: 50%;"></span>
+                                    ${goal.task}
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                    goalsContainer.insertAdjacentHTML('beforeend', goalHtml);
+                });
+            } else {
+                goalsContainer.innerHTML = '<div style="color: #64748B; font-size: 14px;">No goals found for this care plan.</div>';
+            }
+            
+            // Physician Role Info
+            document.getElementById('physician_name').textContent = data.physician_name;
+            document.getElementById('physician_license').textContent = data.license;
+            document.getElementById('physician_npi').textContent = data.npi;
+            
+            // Dietary Info
+            document.getElementById('dietary_name').textContent = data.dietary_name;
+            document.getElementById('dietary_status').textContent = data.dietary_status;
+            document.getElementById('dietary_date').textContent = data.dietary_date;
+        })
+        .catch(error => {
+            console.error('Error fetching care plan data:', error);
+            document.getElementById('header_patient_name').textContent = 'Error loading data';
+        });
+});
+</script>
 {% endblock %}

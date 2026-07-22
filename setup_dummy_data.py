@@ -43,23 +43,29 @@ rates = [
 for r in rates:
     LOCRate.objects.get_or_create(loc_level=r['loc_level'], defaults={'daily_rate': r['daily_rate']})
 
-# Create Assessment
-# if not Assessment.objects.filter(resident=res).exists():
-#     Assessment.objects.create(
-#         resident=res,
-#         version=3,
-#         assessment_type='initial',
-#         author=user,
-#         total_adl_score=20,
-#         adl_bed_mobility=2,
-#         adl_transfer=3,
-#         adl_locomotion=3,
-#         adl_dressing=2,
-#         adl_eating=1,
-#         adl_toilet_use=3,
-#         adl_personal_hygiene=3,
-#         adl_bathing=3,
-#         loc_tier=None,
-#         is_locked=False
-#     )
+# Fix missing Holidays table in SQLite
+from django.db import connection
+with connection.cursor() as cursor:
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS "Holidays" (
+            "HolidayID" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+            "HolidayDate" date NOT NULL UNIQUE,
+            "HolidayName" varchar(250) NOT NULL,
+            "IsNationalHoliday" bool NOT NULL,
+            "Description" varchar(500) NULL,
+            "CreatedAt" datetime NOT NULL
+        )
+    ''')
+
+# Seed a dummy holiday for testing
+from apps.medical.models import Holiday
+from datetime import date
+Holiday.objects.get_or_create(
+    holiday_date=date(2026, 7, 30),
+    defaults={
+        'holiday_name': 'Test Holiday',
+        'is_national_holiday': True
+    }
+)
+
 print("Dummy data setup complete.")
