@@ -16,6 +16,7 @@ urlpatterns = [
     path('care-planning/', include('apps.care_planning.urls')),
 
     # path('incidents/', include('apps.incidents.urls')),
+    path('api/v1/auth/', include('apps.accounts.api.urls')),
     path('api/v1/residents/', include('apps.residents.api.urls')),
 
     path('api/v1/medical/', include('apps.medical.api.urls')),

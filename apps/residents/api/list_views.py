@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
 from apps.residents.models import Resident
@@ -32,6 +33,7 @@ class SC017Pagination(PageNumberPagination):
 class ResidentListAPIView(generics.ListAPIView):
     serializer_class = ResidentListSerializer
     pagination_class = SC017Pagination
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         qs = Resident.objects.all()

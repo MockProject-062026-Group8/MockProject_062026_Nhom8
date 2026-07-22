@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from django.db.models import Q
 from django.db import transaction
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
@@ -25,6 +26,8 @@ from .serializers import (
 )
 
 class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
@@ -88,6 +91,8 @@ class LoginAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class ActivationAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def _validate_token_and_get_user(self, token):
         signer = TimestampSigner(salt=SC002_ACTIVATION_SALT)
         try:
@@ -172,6 +177,8 @@ class ActivationAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class OTPVerifyAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         serializer = OTPVerifySerializer(data=request.data)
         if not serializer.is_valid():
@@ -220,6 +227,8 @@ class OTPVerifyAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 class OTPResendAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         serializer = OTPResendSerializer(data=request.data)
         if not serializer.is_valid():
