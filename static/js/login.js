@@ -64,11 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.detail || 'Invalid email/phone or password.');
             }
             
-            if (!data.verification_token) {
-                throw new Error('Invalid server response: missing token.');
+            if (!data.verification_token || !data.phone_number) {
+                throw new Error('Invalid server response: missing token or phone number.');
             }
             
             sessionStorage.setItem('verification_token', data.verification_token);
+            sessionStorage.setItem('masked_phone_number', data.phone_number);
             window.location.href = redirectUrl;
             
         } catch (error) {

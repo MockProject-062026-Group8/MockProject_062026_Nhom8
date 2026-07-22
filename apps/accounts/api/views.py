@@ -7,9 +7,22 @@ from django.db import transaction
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.contrib.auth.hashers import check_password, make_password
 
-from apps.accounts.models import User
-from apps.accounts.utils import generate_verification_token, mask_phone_number, SC002_ACTIVATION_SALT
-from .serializers import LoginSerializer, ActivationSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from apps.accounts.models import User, OTP
+from apps.accounts.utils import (
+    generate_verification_token,
+    mask_phone_number,
+    SC002_ACTIVATION_SALT,
+    generate_otp,
+    send_otp,
+    validate_verification_token
+)
+from .serializers import (
+    LoginSerializer,
+    ActivationSerializer,
+    OTPVerifySerializer,
+    OTPResendSerializer
+)
 
 class LoginAPIView(APIView):
     def post(self, request, *args, **kwargs):
@@ -53,7 +66,20 @@ class LoginAPIView(APIView):
             )
 
         # Success (ACTIVE)
-        verification_token = generate_verification_token(user.id)
+        with transaction.atomic():
+            user = User.objects.select_for_update().get(id=user.id)
+            OTP.objects.filter(user=user, is_consumed=False).update(is_consumed=True)
+
+            otp_code = generate_otp()
+            otp = OTP.objects.create(
+                user=user,
+                otp_hash=make_password(otp_code),
+                expires_at=datetime.now(timezone.utc) + timedelta(seconds=300)
+            )
+
+            verification_token = generate_verification_token(user.id, otp.id)
+
+            transaction.on_commit(lambda: send_otp(user.phone_number, otp_code))
 
         return Response({
             "verification_token": verification_token,
@@ -143,4 +169,96 @@ class ActivationAPIView(APIView):
             "phone_number": locked_user.phone_number,
             "status": locked_user.status,
             "mfa_enabled": True
+        }, status=status.HTTP_200_OK)
+
+class OTPVerifyAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = OTPVerifySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        token = serializer.validated_data['verification_token']
+        otp_code = serializer.validated_data['otp_code']
+
+        payload = validate_verification_token(token)
+        if not payload:
+            return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            try:
+                user = User.objects.select_for_update().get(id=payload['user_id'])
+                otp = OTP.objects.select_for_update().get(id=payload['otp_id'], user=user)
+            except (User.DoesNotExist, OTP.DoesNotExist):
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if user.status != User.Status.ACTIVE:
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if otp.is_consumed or otp.expires_at <= datetime.now(timezone.utc):
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if not check_password(otp_code, otp.otp_hash):
+                return Response({"detail": "The verification code is invalid."}, status=status.HTTP_400_BAD_REQUEST)
+
+            otp.is_consumed = True
+            otp.save(update_fields=['is_consumed'])
+
+            user.last_login_at = datetime.now(timezone.utc)
+            user.save(update_fields=['last_login_at'])
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": user.role.role_name if user.role else ""
+            }
+        }, status=status.HTTP_200_OK)
+
+class OTPResendAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = OTPResendSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        token = serializer.validated_data['verification_token']
+        payload = validate_verification_token(token)
+        if not payload:
+            return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            try:
+                user = User.objects.select_for_update().get(id=payload['user_id'])
+                old_otp = OTP.objects.select_for_update().get(id=payload['otp_id'], user=user)
+            except (User.DoesNotExist, OTP.DoesNotExist):
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if user.status != User.Status.ACTIVE:
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            if old_otp.is_consumed:
+                return Response({"detail": "The verification code is invalid or expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+            old_otp.is_consumed = True
+            old_otp.save(update_fields=['is_consumed'])
+
+            new_otp_code = generate_otp()
+            new_otp = OTP.objects.create(
+                user=user,
+                otp_hash=make_password(new_otp_code),
+                expires_at=datetime.now(timezone.utc) + timedelta(seconds=300)
+            )
+
+            new_token = generate_verification_token(user.id, new_otp.id)
+
+            transaction.on_commit(lambda: send_otp(user.phone_number, new_otp_code))
+
+        return Response({
+            "verification_token": new_token,
+            "phone_number": mask_phone_number(user.phone_number),
+            "expires_in": 300
         }, status=status.HTTP_200_OK)
