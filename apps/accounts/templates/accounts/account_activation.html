@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate your account</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/account-activation.css' %}">
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-badge">N</div>
+                <h1>Activate your account</h1>
+            </div>
+
+            <div id="loadingState">Loading...</div>
+            <div class="error-banner" id="globalError" style="display: none;"></div>
+
+            <form id="activationForm" class="login-form" style="display: none;"
+                data-api-url="{% url 'accounts_api:activation' token %}" data-redirect-url="{% url 'accounts:login' %}">
+                {% csrf_token %}
+
+                <div class="banner-validity">
+                    Invited by Administrator • link valid 72h
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <div class="readonly-wrapper">
+                        <input type="text" id="email" name="email" readonly class="readonly-input">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <div class="field-subtext">Set by admin — read-only</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Set password <span class="required">*</span></label>
+                    <input type="password" id="password" name="password"
+                        placeholder="At least 8 chars, mixed case + number" required autocomplete="new-password">
+                    <div class="field-error" id="passwordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm password <span class="required">*</span></label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password"
+                        required autocomplete="new-password">
+                    <div class="field-error" id="confirmPasswordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone_number">Phone number <span class="required">*</span></label>
+                    <input type="text" id="phone_number" name="phone_number" placeholder="+1 555 000 1234" required
+                        autocomplete="tel">
+                    <div class="field-subtext">Used for 2-step verification codes.</div>
+                    <div class="field-error" id="phoneError"></div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="accept_terms" name="accept_terms" required>
+                    <label for="accept_terms">I accept the Terms of Use & Privacy Policy</label>
+                    <div class="field-error" id="termsError"></div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-primary">Activate account</button>
+            </form>
+
+            <div id="successState" style="display: none;">
+                <h2>Account activated successfully!</h2>
+                <p>Redirecting to login...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/account-activation.js' %}"></script>
+</body>
+
+</html>

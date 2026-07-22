@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-step verification</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/2step-verification.css' %}">
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo-badge">N</div>
+                <h1>Two-step verification</h1>
+                <p>A 6-digit code was sent to <span id="displayPhone"></span></p>
+            </div>
+
+            <div class="success-banner" id="globalSuccess" style="display: none;"></div>
+
+            <form id="otpForm" class="login-form" data-verify-url="{% url 'accounts_api:otp_verify' %}"
+                data-resend-url="{% url 'accounts_api:otp_resend' %}" data-login-url="{% url 'accounts:login' %}">
+
+                {% csrf_token %}
+                <div class="error-banner" id="globalError" style="display: none;"></div>
+
+                <div class="form-group otp-group">
+                    <div class="otp-inputs">
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                    </div>
+                    <div class="field-error" id="otpFieldError" style="display: none;"></div>
+                </div>
+
+                <button type="submit" id="verifyBtn" class="btn-primary">Verify</button>
+
+                <div class="resend-container">
+                    <span id="resendText">Didn't receive the code?</span>
+                    <button type="button" id="resendBtn" class="btn-link">
+                        Resend code <span id="resendTimer">(05:00)</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="login-footer">
+            <a href="#" id="differentAccountLink">Use a different account</a>
+        </div>
+    </div>
+
+    <script src="{% static 'js/2step-verification.js' %}"></script>
+</body>
+
+</html>

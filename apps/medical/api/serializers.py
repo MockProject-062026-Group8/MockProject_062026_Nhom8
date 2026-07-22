@@ -1,6 +1,16 @@
 from rest_framework import serializers
 from apps.medical.models import ResidentCareLevelHistory
 
+from django.db import transaction
+from django.contrib.auth.hashers import make_password
+from apps.medical.models import PreAdmissionScreening
+from apps.residents.models import Admission, Resident
+from apps.rooms.models import Bed
+
+from rest_framework import serializers
+from apps.medical.models import CareLevel, CarePlan, CareGoal
+
+
 class ResidentCareLevelHistorySerializer(serializers.ModelSerializer):
     actor_name = serializers.SerializerMethodField()
 
@@ -16,11 +26,7 @@ class ResidentCareLevelHistorySerializer(serializers.ModelSerializer):
             return obj.actor.get_full_name() or obj.actor.username
         return "System"
 
-from django.db import transaction
-from django.contrib.auth.hashers import make_password
-from apps.medical.models import PreAdmissionScreening
-from apps.residents.models import Admission, Resident
-from apps.rooms.models import Bed
+
 
 class PreAdmissionScreeningSerializer(serializers.ModelSerializer):
     class Meta:
@@ -165,8 +171,6 @@ class AdmissionCreateSerializer(serializers.ModelSerializer):
         )
 
 
-from rest_framework import serializers
-from apps.medical.models import CareLevel, CarePlan, CareGoal
 
 
 class CareLevelSerializer(serializers.ModelSerializer):

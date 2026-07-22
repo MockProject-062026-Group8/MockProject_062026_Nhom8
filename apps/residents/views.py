@@ -1,13 +1,18 @@
-<<<<<<< HEAD
+
+# import datetime
+# # pyrefly: ignore [missing-import]
+# from django.shortcuts import render
+
+# # Create your views here.
+
+# def add_resident(request):
+#     return render(request, "residents/add_resident.html")
+
+
 from django.shortcuts import render
 
-def add_resident(request):
-    return render(request, "residents/add_resident.html")
 
 
-def resident_list(request):
-    return render(request, "residents/list.html")
-=======
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import *
@@ -24,7 +29,13 @@ def add_resident(request):
 
 def resident_list(request):
     return render(request, "residents/resident_list.html")
+  
+def add_resident(request):
+    return render(request, "residents/add_resident.html")
 
+
+def resident_list(request):
+    return render(request, "residents/list.html")
 
 # Resident detail
 class ResidentDetail(View):
@@ -430,4 +441,5 @@ def check_similar_resident(request):
     return JsonResponse({'exists': False})
 
 
->>>>>>> dev
+
+

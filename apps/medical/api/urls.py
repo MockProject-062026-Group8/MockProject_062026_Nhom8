@@ -1,11 +1,14 @@
 from django.urls import path
 
 from . import views
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path('residents/<int:resident_id>/loc-history/', views.ResidentCareLevelHistoryListView.as_view(), name='loc-history-list'),
-    path('residents/<int:resident_id>/loc-history/export/', views.ResidentCareLevelHistoryExportView.as_view(), name='loc-history-export'),
-]
+from .views import (
+    CareLevelViewSet,
+    CarePlanViewSet,
+    CareGoalViewSet,
+)
 
 from .views import (
     PreAdmissionScreeningDetailAPIView, 
@@ -13,6 +16,14 @@ from .views import (
     ComplianceCheckAPIView,
     AdmissionCreateAPIView
 )
+
+
+urlpatterns = [
+    path('residents/<int:resident_id>/loc-history/', views.ResidentCareLevelHistoryListView.as_view(), name='loc-history-list'),
+    path('residents/<int:resident_id>/loc-history/export/', views.ResidentCareLevelHistoryExportView.as_view(), name='loc-history-export'),
+]
+
+
 
 app_name = 'medical_api'
 
@@ -25,14 +36,7 @@ urlpatterns = [
 ]
 
 
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 
-from .views import (
-    CareLevelViewSet,
-    CarePlanViewSet,
-    CareGoalViewSet,
-)
 
 router = DefaultRouter()
 router.register(r"care-levels", CareLevelViewSet)

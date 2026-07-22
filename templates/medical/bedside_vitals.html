@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bedside Vitals{% endblock %}
+
+{% block sidebar %}
+    {% include 'partials/sidebar.html' with active_menu='care_planning' %}
+{% endblock %}
+
+{% block breadcrumb %}
+<span class="bc-sep">Care Planning</span> 
+<span class="bc-sep">&gt;</span> 
+<span class="bc-current">Bedside Vitals</span>
+{% endblock %}
+
+{% block content %}
+<div class="vitals-container">
+    <div class="vitals-header">
+        <h1 class="page-title">Record Vitals &mdash; {{ resident_name }}</h1>
+        <div class="vitals-subtitle text-muted">{{ room_number }} &middot; {{ task_name }} &middot; {{ due_time }}</div>
+    </div>
+
+    <div class="vitals-layout">
+        <!-- Main Form Column -->
+        <div class="vitals-form-col">
+            <div class="card vitals-card">
+                <div class="card-header">
+                    <h2>Bedside Vitals</h2>
+                    <p class="text-muted">Enter measured values. Out-of-range readings are flagged.</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Blood Pressure (systolic)</label>
+                            <div class="input-group-unit">
+                                <input type="number" name="bp_sys" value="128" placeholder="e.g. 120">
+                                <span class="unit">mmHg</span>
+                            </div>
+                        </div>
+                        <div class="form-group half">
+                            <label>Blood Pressure (diastolic)</label>
+                            <div class="input-group-unit">
+                                <input type="number" name="bp_dia" value="82" placeholder="e.g. 80">
+                                <span class="unit">mmHg</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Heart Rate</label>
+                            <div class="input-group-unit">
+                                <input type="number" name="heart_rate" value="76" placeholder="e.g. 75">
+                                <span class="unit">bpm</span>
+                            </div>
+                        </div>
+                        <div class="form-group half has-error">
+                            <label class="text-danger">SpO2</label>
+                            <div class="input-group-unit abnormal">
+                                <input type="number" name="spo2" value="88" placeholder="e.g. 98" class="input-danger">
+                                <span class="unit">%</span>
+                            </div>
+                            <div class="error-msg">Abnormal &mdash; supervising nurse will be notified.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Temperature</label>
+                            <div class="input-group-unit">
+                                <input type="number" name="temp" value="98.9" step="0.1" placeholder="e.g. 98.6">
+                                <span class="unit">&deg;F</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width" style="margin-top: 15px;">
+                        <label>Notes</label>
+                        <textarea class="form-input" name="notes" rows="3" placeholder="Add any observational notes...">Resident resting; recheck SpO2 in 15 min per nurse.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Info Column -->
+        <div class="vitals-info-col">
+            <!-- Recorder Card -->
+            <div class="card info-card">
+                <div class="card-header-small">
+                    <h3>Recorder</h3>
+                </div>
+                <div class="card-body recorder-details">
+                    <div class="recorder-name">{{ recorder_name }}</div>
+                    <div class="recorder-note text-muted">Captured automatically</div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label text-muted">Timestamp</span>
+                        <span class="detail-val"><b>{{ recorder_time }}</b></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label text-muted">Linked task</span>
+                        <span class="detail-val"><b>{{ task_name }}</b></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abnormal Alert Card -->
+            <div class="alert-card-danger">
+                <h4>1 abnormal reading</h4>
+                <p class="text-danger-light">SpO2 88% is below 92% threshold.</p>
+                <p class="text-danger-light">Saving will alert Anna Lee, RN and flag this record.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Bar -->
+    <div class="vitals-action-bar action-bar">
+        <button type="button" class="btn-cancel">Cancel</button>
+        <button type="button" class="btn-save btn-primary-blue" id="btnSaveVitals">Save & Mark Done</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var btnSave = document.getElementById('btnSaveVitals');
+        if (btnSave) {
+            btnSave.addEventListener('click', function() {
+                var btn = this;
+                var originalText = btn.innerText;
+                btn.innerText = 'Saving...';
+                btn.disabled = true;
+
+                fetch('{% url "medical:save_bedside_vitals" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        'bp_sys': document.querySelector('input[name="bp_sys"]').value,
+                        'bp_dia': document.querySelector('input[name="bp_dia"]').value,
+                        'heart_rate': document.querySelector('input[name="heart_rate"]').value,
+                        'spo2': document.querySelector('input[name="spo2"]').value,
+                        'temp': document.querySelector('input[name="temp"]').value,
+                        'notes': document.querySelector('textarea[name="notes"]').value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        btn.innerText = 'Saved Successfully!';
+                        btn.classList.replace('btn-primary-blue', 'btn-success');
+                        btn.style.backgroundColor = '#10B981'; // Tailwind green-500
+                        
+                        setTimeout(() => {
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                            btn.style.backgroundColor = '';
+                            btn.classList.replace('btn-success', 'btn-primary-blue');
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving vitals:', error);
+                    btn.innerText = 'Error!';
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

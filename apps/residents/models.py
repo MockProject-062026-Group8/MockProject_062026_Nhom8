@@ -72,6 +72,18 @@ class Resident(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def full_name(self):
+        if self.middle_name:
+            return f"{self.first_name} {self.middle_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name}"
+
+    @property
+    def room_number(self):
+        if self.bed and hasattr(self.bed, 'room') and self.bed.room:
+            return getattr(self.bed.room, 'room_number', 'N/A')
+        return 'N/A'
+
 class ResidentSensitiveInfo(models.Model):
     resident = models.OneToOneField(Resident, on_delete=models.CASCADE)
     ssn_encrypted = models.CharField(max_length=512, null=True, blank=True)

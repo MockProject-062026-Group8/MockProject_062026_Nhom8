@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}SC-022 Initial Assessment – {{ resident.full_name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="#" style="color:#64748b;text-decoration:none">Residents</a> <span style="margin:0 8px;color:#cbd5e1">></span> 
+<span style="color:#0f172a">New Admission Flow</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sc022-wrap { max-width: 1000px; margin: 0 auto; padding-bottom: 80px; }
+
+  /* Top Steps */
+  .steps-nav { display: flex; gap: 12px; margin-bottom: 24px; }
+  .step-item { flex: 1; border: 1px solid #3b82f6; border-radius: 6px; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; color: #3b82f6; background: #fff; }
+  .step-item.active { background: #3b82f6; color: #fff; }
+
+  /* Header */
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 { font-size: 22px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .badge-initial { background: #eff6ff; color: #3b82f6; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; border: 1px solid #bfdbfe; }
+  .page-subtitle { font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 16px; }
+  .page-subtitle a { color: #3b82f6; text-decoration: none; font-weight: 500; }
+
+  /* Cards */
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+  .card-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .card-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+  .card-subtitle { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .card-right { font-size: 13px; font-weight: 700; color: #334155; }
+  .card-body { padding: 0 20px 20px 20px; }
+
+  /* ADL / IADL Tables */
+  .score-table { width: 100%; border-collapse: collapse; }
+  .score-table th, .score-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; vertical-align: middle; }
+  .score-table td:first-child, .score-table th:first-child { text-align: left; width: 35%; font-size: 13px; color: #334155; }
+  .score-table th { font-size: 10px; font-weight: 500; color: #94a3b8; }
+  .score-table tr:last-child td { border-bottom: none; }
+
+  /* Radio Circles */
+  .radio-cell input[type="radio"] { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 2px solid #cbd5e1; border-radius: 50%; cursor: pointer; margin: 0; outline: none; transition: all 0.2s; vertical-align: middle; }
+  .radio-cell input[type="radio"]:checked { border-color: #0f172a; background-color: #0f172a; box-shadow: inset 0 0 0 3px #fff; }
+  
+  .subtotal-row { padding-top: 16px; font-size: 12px; font-weight: 600; color: #64748b; }
+
+  /* 2-Col Layout */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  
+  /* Bullet List */
+  .bullet-list { list-style: none; padding: 0; margin: 0; }
+  .bullet-list li { position: relative; padding-left: 12px; font-size: 13px; color: #334155; margin-bottom: 6px; }
+  .bullet-list li::before { content: "•"; position: absolute; left: 0; color: #94a3b8; }
+
+  /* Badge Green */
+  .badge-green { display: inline-block; background: #dcfce7; color: #16a34a; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; border: 1px solid #bbf7d0; }
+
+  /* Inputs */
+  .vitals-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+  .input-group { flex: 1; min-width: 100px; }
+  .input-label { display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+  .input-box { display: flex; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }
+  .input-box input { width: 100%; border: none; padding: 8px 10px; font-size: 13px; outline: none; }
+  .input-box .unit { background: #fff; padding: 8px 10px 8px 0; font-size: 12px; color: #94a3b8; border-left: none; }
+
+  /* Cog Radio */
+  .cog-radios { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .cog-radio-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; cursor: pointer; }
+  .cog-radio-label input[type="radio"] { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; border: 2px solid #cbd5e1; border-radius: 50%; outline: none; margin: 0; cursor: pointer; }
+  .cog-radio-label input[type="radio"]:checked { border-color: #0f172a; background-color: #0f172a; box-shadow: inset 0 0 0 3px #fff; }
+
+  .textarea-box { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 13px; color: #334155; outline: none; resize: vertical; box-sizing: border-box; }
+  .textarea-box:focus, .input-box:focus-within { border-color: #3b82f6; }
+
+  /* Footer */
+  .bottom-bar { position: fixed; bottom: 0; left: 250px; right: 0; background: #fff; border-top: 1px solid #e2e8f0; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+  @media(max-width: 991px) { .bottom-bar { left: 0; } }
+  .btn-back { padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff; color: #334155; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-save { padding: 8px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-save:hover { background: #1d4ed8; }
+
+  /* Diagnostic Add button */
+  .add-diag-btn { font-size: 11px; color: #3b82f6; background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
+  .diag-input-row { display: none; gap: 8px; margin-top: 8px; }
+  .diag-input-row input { flex: 1; border: 1px solid #e2e8f0; padding: 4px 8px; font-size: 12px; border-radius: 4px; outline:none; }
+  .diag-input-row button { background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc022-wrap">
+
+  <!-- Steps -->
+  <div class="steps-nav">
+    <div class="step-item" style="color:#64748b; border-color:#cbd5e1; font-weight:500;">1 Pre-Screening ✓</div>
+    <div class="step-item" style="color:#64748b; border-color:#cbd5e1; font-weight:500;">2 Admission Form ✓</div>
+    <div class="step-item active">3 Initial Assessment</div>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Step 3: Initial Assessment <span class="badge-initial">Initial</span></h1>
+    <div class="page-subtitle">
+      <span>{{ resident.full_name }} · Room {{ resident.room_number|default:"TBD" }} · Version 1 of 1</span>
+      <a href="#">View Assessment History →</a>
+    </div>
+  </div>
+
+  <form id="assessmentForm" method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="assessment_type" value="initial">
+    <!-- Keep assessment date hidden or set to now since mockup does not have a date picker field -->
+    <input type="hidden" name="assessment_date" value="{% now 'Y-m-d\TH:i' %}">
+    
+    <!-- Diagnoses Data -->
+    <input type="hidden" name="diagnoses_json" id="diagnoses_json" value="{{ diagnoses_list_json }}">
+
+    <!-- ADL Scoring -->
+    <div class="card">
+      <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <div>
+          <div class="card-title">Activities of Daily Living (ADL Scoring)</div>
+        </div>
+        <div class="card-right">ADL Total: <span id="adlT">20</span> / 32</div>
+      </div>
+      <div class="card-body">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>0 Indep.</th>
+              <th>1 Super.</th>
+              <th>2 Limited</th>
+              <th>3 Extensive</th>
+              <th>4 Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in adl_rows %}
+            <tr>
+              <td>{{ row.name }}</td>
+              <td class="radio-cell"><input type="radio" name="adl_{{ row.key }}" value="0" class="adl-r" {% if row.score == 0 %}checked{% endif %}></td>
+              <td class="radio-cell"><input type="radio" name="adl_{{ row.key }}" value="1" class="adl-r" {% if row.score == 1 %}checked{% endif %}></td>
+              <td class="radio-cell"><input type="radio" name="adl_{{ row.key }}" value="2" class="adl-r" {% if row.score == 2 %}checked{% endif %}></td>
+              <td class="radio-cell"><input type="radio" name="adl_{{ row.key }}" value="3" class="adl-r" {% if row.score == 3 %}checked{% endif %}></td>
+              <td class="radio-cell"><input type="radio" name="adl_{{ row.key }}" value="4" class="adl-r" {% if row.score == 4 %}checked{% endif %}></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="subtotal-row">
+          Subtotal (drives LOC Tier — see M1-US-08): <span id="adlSubT">20</span> / 32
+        </div>
+      </div>
+    </div>
+
+    <!-- IADL Scoring -->
+    <div class="card">
+      <div class="card-header" style="border-bottom:none; padding-bottom:8px;">
+        <div>
+          <div class="card-title">Instrumental ADL — Lawton (personalization only)</div>
+          <div class="card-subtitle">Not used to determine LOC tier — informs care plan personalization.</div>
+        </div>
+        <div class="card-right">IADL Total: <span id="iadlT">5</span> / 8</div>
+      </div>
+      <div class="card-body" style="max-width: 600px;">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>0 Dependent</th>
+              <th>1 Independent</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in iadl_rows %}
+            <tr>
+              <td>{{ row.name }}</td>
+              <td class="radio-cell"><input type="radio" name="iadl_{{ row.key }}" value="0" class="iadl-r" {% if row.score == 0 %}checked{% endif %}></td>
+              <td class="radio-cell"><input type="radio" name="iadl_{{ row.key }}" value="1" class="iadl-r" {% if row.score == 1 %}checked{% endif %}></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Diagnosis -->
+      <div class="card">
+        <div class="card-header" style="padding-bottom:12px;">
+          <div class="card-title">Diagnosis</div>
+        </div>
+        <div class="card-body">
+          <ul class="bullet-list" id="diagList">
+            <!-- Rendered by JS -->
+          </ul>
+          <div style="margin-top: 12px;">
+            <button type="button" class="add-diag-btn" id="btnShowDiagInput">+ Add Diagnosis</button>
+            <div class="diag-input-row" id="diagInputRow">
+              <input type="text" id="newDiagName" placeholder="Diagnosis name...">
+              <button type="button" id="btnAddDiag">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Allergies -->
+      <div class="card">
+        <div class="card-header" style="padding-bottom:12px;">
+          <div class="card-title">Allergies</div>
+        </div>
+        <div class="card-body">
+          {% if form.allergies.value == 'NKDA' or not form.allergies.value %}
+             <span class="badge-green" id="nkdaBadge">NKDA</span>
+             <input type="text" name="allergies" id="allergies" value="{{ form.allergies.value|default:'NKDA' }}" style="display:none;">
+             <button type="button" class="add-diag-btn" style="margin-left:8px;" onclick="document.getElementById('allergies').style.display='inline-block'; this.style.display='none'; document.getElementById('nkdaBadge').style.display='none'; document.getElementById('allergies').value=''; document.getElementById('allergies').focus();">Edit</button>
+          {% else %}
+             <input type="text" name="allergies" id="allergies" value="{{ form.allergies.value }}" style="width:100%; border:1px solid #e2e8f0; padding:6px; border-radius:4px; font-size:13px; outline:none;">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Vitals -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:12px;">
+        <div class="card-title">Vitals</div>
+      </div>
+      <div class="card-body">
+        <div class="vitals-grid">
+          {% for vs in vs_rows %}
+          <div class="input-group">
+            <label class="input-label">{{ vs.name }}</label>
+            <div class="input-box">
+              <input type="text" name="vs_{{ vs.key }}" value="{{ vs.value }}" placeholder="—">
+              <span class="unit">{{ vs.unit }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Cognitive Status -->
+    <div class="card">
+      <div class="card-header" style="padding-bottom:12px;">
+        <div class="card-title">Cognitive Status</div>
+      </div>
+      <div class="card-body">
+        <div class="cog-radios">
+          {% for val, label in form.fields.cognitive_status.choices %}
+            {% if val %}
+            <label class="cog-radio-label">
+              <input type="radio" name="cognitive_status" value="{{ val }}" {% if form.cognitive_status.value == val %}checked{% endif %}>
+              {{ label }}
+            </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Notes -->
+    <div class="card" style="margin-bottom: 40px;">
+      <div class="card-header" style="padding-bottom:12px;">
+        <div class="card-title">Clinical Notes</div>
+      </div>
+      <div class="card-body">
+        <textarea name="clinical_notes" class="textarea-box" rows="2" placeholder="Enter clinical notes...">{{ form.clinical_notes.value|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-bar">
+      <button type="button" class="btn-back" onclick="history.back()">← Back</button>
+      <button type="submit" class="btn-save">Save Assessment → triggers LOC calc</button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  'use strict';
+  
+  // ADL Calc
+  function calcAdl() {
+    let t = 0;
+    document.querySelectorAll('.adl-r:checked').forEach(r => t += parseInt(r.value || 0));
+    document.getElementById('adlT').innerText = t;
+    document.getElementById('adlSubT').innerText = t;
+  }
+  document.querySelectorAll('.adl-r').forEach(r => r.addEventListener('change', calcAdl));
+  calcAdl();
+
+  // IADL Calc
+  function calcIadl() {
+    let t = 0;
+    document.querySelectorAll('.iadl-r:checked').forEach(r => t += parseInt(r.value || 0));
+    document.getElementById('iadlT').innerText = t;
+  }
+  document.querySelectorAll('.iadl-r').forEach(r => r.addEventListener('change', calcIadl));
+  calcIadl();
+
+  // Diagnoses
+  let D = [];
+  try { D = JSON.parse(document.getElementById('diagnoses_json').value || '[]'); } catch(e) {}
+  const dList = document.getElementById('diagList');
+  
+  function renderD() {
+    dList.innerHTML = D.map((d, i) => `<li>${d.name} <button type="button" class="add-diag-btn" style="color:#ef4444; margin-left:8px;" onclick="removeD(${i})">x</button></li>`).join('');
+    document.getElementById('diagnoses_json').value = JSON.stringify(D);
+  }
+  
+  window.removeD = function(i) {
+    D.splice(i, 1);
+    renderD();
+  };
+
+  document.getElementById('btnShowDiagInput').addEventListener('click', () => {
+    document.getElementById('diagInputRow').style.display = 'flex';
+    document.getElementById('newDiagName').focus();
+  });
+
+  document.getElementById('btnAddDiag').addEventListener('click', () => {
+    const v = document.getElementById('newDiagName').value.trim();
+    if (v) {
+      D.push({ id: null, name: v, code: '', is_primary: false, notes: '' });
+      document.getElementById('newDiagName').value = '';
+      document.getElementById('diagInputRow').style.display = 'none';
+      renderD();
+    }
+  });
+
+  renderD();
+})();
+</script>
+{% endblock %}

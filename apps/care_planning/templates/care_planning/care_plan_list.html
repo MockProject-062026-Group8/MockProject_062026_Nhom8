@@ -175,13 +175,13 @@
                     </span>
                 </td>
                 <td>
-                    <span class="badge status-{{ plan.status }}">
+                    <span class="badge status-{{ plan.status|lower }}">
                         {{ plan.get_status_display }}
                     </span>
                 </td>
                 <td>{{ plan.last_review_date|date:"Y-m-d"|default:"--" }}</td>
                 <td>
-                    {% if plan.status == 'review_due' %}
+                    {% if plan.status == 'REVIEW_DUE' %}
                         <span class="text-overdue">overdue</span>
                     {% else %}
                         {{ plan.next_review_date|date:"Y-m-d"|default:"--" }}
@@ -194,7 +194,13 @@
                         --
                     {% endif %}
                 </td>
-                <td><a href="#" class="action-link">View</a></td>
+                <td>
+                    {% if plan.status == 'PENDING_REVIEW' %}
+                        <a href="{% url 'care_planning:care_plan_review' plan.id %}" class="action-link">View</a>
+                    {% else %}
+                        <a href="{% url 'care_planning:care_plan_detail' %}" class="action-link">View</a>
+                    {% endif %}
+                </td>
             </tr>
             {% empty %}
             <tr>

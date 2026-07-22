@@ -25,12 +25,15 @@
   </head>
   <body>
     <div class="app-container">
-      {% include 'partials/sidebar.html' %}
+      {% block sidebar %}
+        {% include 'partials/sidebar.html' %}
+      {% endblock %}
       
       <div class="main-content-wrapper">
         {% include 'partials/navbar.html' %}
         
         <main class="main-content">
+          {% block breadcrumb %}{% endblock %}
           {% block content %}{% endblock %}
         </main>
       </div>

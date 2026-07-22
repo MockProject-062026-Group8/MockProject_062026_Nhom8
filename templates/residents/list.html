@@ -1,112 +1,98 @@
-{% extends 'base.html' %}
 {% load static %}
-
-{% block title %}Resident List{% endblock %}
-{% block navbar_title %}Resident List{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/residents.css' %}">
-{% endblock %}
-
-{% block content %}
-<div class="content" style="padding: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px;">Residents</h2>
-        <a href="#" class="btn-primary" style="background: var(--primary-color, #2563eb); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none;">
-            <i class="fas fa-plus"></i> Add New Resident
-        </a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Residents</title>
+    <link rel="stylesheet" href="{% static 'css/resident-list.css' %}">
+</head>
+<body>
+<div class="resident-list-container">
+    <div class="breadcrumb">Residents &gt; List</div>
+    <div class="header-actions">
+        <h1>Residents</h1>
+        <a href="{% url 'residents:resident_create' %}" class="btn btn-primary" id="addResidentBtn" style="display: none;">+ Add New Resident</a>
+        <div class="add-resident-helper" id="addResidentHelper" style="display: none;">Visible to Admission Staff only (view-only for Nurse)</div>
     </div>
 
-    <!-- ===== Search + filters ===== -->
-    <form class="toolbar" method="get">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" name="q" value="{{ query }}"
-                   placeholder="Search by name, room number, or resident ID...">
-        </div>
-        <div class="filter-tabs">
-            <a href="?status=all{% if query %}&q={{ query }}{% endif %}"
-               class="{% if status_filter == 'all' %}active{% endif %}">All ({{ counts.all }})</a>
-            <a href="?status=active{% if query %}&q={{ query }}{% endif %}"
-               class="{% if status_filter == 'active' %}active{% endif %}">Active ({{ counts.active }})</a>
-            <a href="?status=discharged{% if query %}&q={{ query }}{% endif %}"
-               class="{% if status_filter == 'discharged' %}active{% endif %}">Discharged ({{ counts.discharged }})</a>
-            <a href="?status=pending{% if query %}&q={{ query }}{% endif %}"
-               class="{% if status_filter == 'pending' %}active{% endif %}">Pending ({{ counts.pending }})</a>
-        </div>
-    </form>
-
-    <div class="table-card">
-        {% if residents %}
-        <!-- ===== Desktop / tablet table ===== -->
-        <div class="table-scroll">
-            <table class="residents">
-                <thead>
-                    <tr>
-                        <th>Res ID</th>
-                        <th>Name</th>
-                        <th>Room</th>
-                        <th>Status</th>
-                        <th>DOB</th>
-                        <th>YOB</th>
-                        <th>Gender</th>
-                        <th>Payer Source</th>
-                        <th>Admission Date</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in residents %}
-                    <tr>
-                        <td class="res-id">{{ r.resident_id }}</td>
-                        <td>{{ r.full_name }}</td>
-                        <td>{{ r.room_number }}</td>
-                        <td><span class="badge {{ r.status }}">{{ r.status|capfirst }}</span></td>
-                        <td>{{ r.dob|date:"m/d/Y" }}</td>
-                        <td>{{ r.yob }}</td>
-                        <td>
-                            {% if r.gender == 'female' %}<i class="fas fa-venus gender-icon"></i>Female
-                            {% elif r.gender == 'male' %}<i class="fas fa-mars gender-icon"></i>Male
-                            {% else %}<i class="fas fa-genderless gender-icon"></i>Other{% endif %}
-                        </td>
-                        <td>{{ r.payer_source }}</td>
-                        <td>{{ r.admission_date|date:"m/d/Y" }}</td>
-                        <td><a href="#" class="btn-view">View</a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- ===== Mobile stacked cards ===== -->
-        <div class="card-list">
-            {% for r in residents %}
-            <div class="resident-card">
-                <div class="resident-card-head">
-                    <div>
-                        <div class="name">{{ r.full_name }}</div>
-                        <div class="rid">{{ r.resident_id }} · Room {{ r.room_number }}</div>
-                    </div>
-                    <span class="badge {{ r.status }}">{{ r.status|capfirst }}</span>
-                </div>
-                <div class="resident-card-grid">
-                    <div><span class="label">DOB</span>{{ r.dob|date:"m/d/Y" }}</div>
-                    <div><span class="label">YOB</span>{{ r.yob }}</div>
-                    <div><span class="label">Gender</span>{{ r.gender|capfirst }}</div>
-                    <div><span class="label">Payer Source</span>{{ r.payer_source }}</div>
-                    <div><span class="label">Admission Date</span>{{ r.admission_date|date:"m/d/Y" }}</div>
-                </div>
-                <a href="#" class="btn-view">View</a>
+    <div class="summary-cards">
+        <div class="card" id="cardTotal">
+            <div class="card-icon">&#128101;</div>
+            <div class="card-data">
+                <div class="card-title">Total Residents</div>
+                <div class="card-value" id="countTotal">--</div>
             </div>
-            {% endfor %}
         </div>
+        <div class="card" id="cardActive">
+            <div class="card-icon">&#9989;</div>
+            <div class="card-data">
+                <div class="card-title">Active</div>
+                <div class="card-value" id="countActive">--</div>
+            </div>
+        </div>
+        <div class="card" id="cardDischarged">
+            <div class="card-icon">&#10060;</div>
+            <div class="card-data">
+                <div class="card-title">Discharged</div>
+                <div class="card-value" id="countDischarged">--</div>
+            </div>
+        </div>
+        <div class="card" id="cardPending">
+            <div class="card-icon">&#128338;</div>
+            <div class="card-data">
+                <div class="card-title">Pending</div>
+                <div class="card-value" id="countPending">--</div>
+            </div>
+        </div>
+    </div>
 
-        {% else %}
-        <div class="empty-state">
-            <i class="fas fa-user-slash" style="font-size:28px; margin-bottom:10px; display:block;"></i>
-            No residents match your search or filter.
-        </div>
-        {% endif %}
+    <div class="filters-bar">
+        <input type="text" id="searchInput" placeholder="Search by name, room, or resident ID">
+        <select id="statusFilter">
+            <option value="">Status: All</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PENDING">Pending</option>
+            <option value="DISCHARGED">Discharged</option>
+            <option value="DECEASED">Deceased</option>
+        </select>
+        <!-- Text compatible dropdown matching Figma -->
+        <input type="text" id="referralFilter" placeholder="Referral: All (type to filter)" list="referralList">
+        <datalist id="referralList"></datalist>
+        <button class="btn btn-secondary">Table</button>
+    </div>
+
+    <div class="table-info">
+        <span id="recordCountText">Loading...</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="resident-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>DOB (Age)</th>
+                    <th>Payer Source</th>
+                    <th>Referral Source</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="residentTableBody">
+                <tr id="loadingState"><td colspan="7">Loading...</td></tr>
+                <tr id="errorState" style="display: none;"><td colspan="7" class="text-danger">Failed to load residents.</td></tr>
+                <tr id="emptyState" style="display: none;"><td colspan="7">No residents found</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="paginationControls">
+        <button id="prevPageBtn" disabled>Previous</button>
+        <span id="pageIndicator">Page 1</span>
+        <button id="nextPageBtn" disabled>Next</button>
     </div>
 </div>
-{% endblock %}
+    <script src="{% static 'js/resident-list.js' %}"></script>
+</body>
+</html>

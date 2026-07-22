@@ -1,0 +1,432 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHMS - Care Plan Review</title>
+
+    <!-- File CSS chung & CSS riêng -->
+    <link rel="stylesheet" href="{% static 'css/care_plan_create.css' %}">
+    <link rel="stylesheet" href="{% static 'css/care_plan_detail.css' %}">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        /* Layout Layout Cố định có Sidebar */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Left */
+        .sidebar-container {
+            width: 240px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px;
+            flex-shrink: 0;
+        }
+
+        .brand-header {
+            font-weight: 700;
+            font-size: 15px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            margin-bottom: 20px;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: #475569;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: #f1f5f9;
+            color: #2563eb;
+        }
+
+        .badge-soon {
+            font-size: 10px;
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        /* Main Content Wrapper */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Navigation */
+        .top-navbar {
+            height: 56px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+        }
+
+        .top-icon-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .main-page-content {
+            padding: 24px;
+            max-width: 1280px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR DỰ ÁN NHMS -->
+    <aside class="sidebar-container">
+        <div class="brand-header">
+            <i class="bi bi-list"></i>
+            <div>
+                NHMS <span class="brand-sub">Nursing Home Management</span>
+            </div>
+        </div>
+
+        <ul class="nav-list">
+            <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-people"></i> Residents
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link active">
+                    <i class="bi bi-journal-medical"></i> Care Planning
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-prescription2"></i> eMAR <span class="badge-soon">soon</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-exclamation-triangle"></i> Incident & Risk
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-graph-up"></i> Reports
+                </a>
+            </li>
+        </ul>
+
+        <div style="margin-top: auto;">
+            <a href="#" class="nav-link" style="color: #64748b;">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- KHU VỰC NỘI DUNG CHÍNH (WRAPPER) -->
+    <div class="main-wrapper">
+        <!-- TOPBAR NAVBAR -->
+        <header class="top-navbar">
+            <button class="top-icon-btn"><i class="bi bi-bell"></i></button>
+            <button class="top-icon-btn"><i class="bi bi-question-circle"></i></button>
+            <div class="user-profile">
+                <i class="bi bi-person-circle" style="font-size: 24px; color: #94a3b8;"></i>
+                <div>
+                    <div>Anna Lee</div>
+                    <div class="user-role">Nurse</div>
+                </div>
+                <i class="bi bi-chevron-down" style="font-size: 12px; margin-left: 4px;"></i>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT PAGE SC029 -->
+        <main class="main-page-content">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb-text" style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
+                Care Planning &gt; Review &gt; {{ resident_name|default:"Robert Hayes" }}
+            </div>
+
+            <!-- Header Section -->
+            <div class="header-section" style="margin-bottom: 16px;">
+                <div class="header-title-group">
+                    <h1 class="header-title" style="font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; margin: 0;">
+                        Care Plan — {{ resident_name|default:"Robert Hayes" }}
+                        <span class="badge-active" style="background-color: #dcfce7; color: #166534; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 600;">Active</span>
+                    </h1>
+                    <p class="header-sub" style="color: #64748b; font-size: 14px; margin-top: 4px;">
+                        {{ room|default:"Room 204B" }} • {{ loc_tier|default:"LOC Tier 3" }} • Next review {{ next_review|default:"2026-07-04" }}
+                    </p>
+                </div>
+            </div>
+
+            
+            {% if holiday_warning %}
+            <div class="alert-holiday-warning" style="background-color: #fffbeb; border: 1px solid #fef3c7; color: #d97706; padding: 14px 20px; border-radius: 10px; font-size: 15px; font-weight: 500; margin-bottom: 24px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ holiday_warning }}
+            </div>
+            {% endif %}
+            
+            <!-- Navigation Tabs -->
+
+            <div class="tab-navigation">
+                <a href="#" class="tab-item active">Overview</a>
+                <a href="#" class="tab-item">Activity</a>
+                <a href="#" class="tab-item">Cost</a>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column: Care Areas & Timeline -->
+                <div class="left-column">
+                    <h3 class="section-title">Care Areas</h3>
+
+                    <!-- Care Area 1: Mobility -->
+                    <div class="care-area-card">
+                        <div class="card-header">
+                            <span class="care-area-name">Mobility</span>
+                            <span class="status-badge on-track">On Track</span>
+                        </div>
+                        <div class="card-goal">
+                            <strong>Goal:</strong> Ambulate 50 ft with walker x2/day.
+                        </div>
+                        <div class="card-task">
+                            <span class="dot-blue"></span> Assist ambulation w/ walker, 2x daily.
+                        </div>
+                    </div>
+
+                    <!-- Care Area 2: Skin Integrity -->
+                    <div class="care-area-card">
+                        <div class="card-header">
+                            <span class="care-area-name">Skin Integrity</span>
+                            <span class="status-badge at-risk">At Risk</span>
+                        </div>
+                        <div class="card-goal">
+                            <strong>Goal:</strong> Maintain skin integrity (no stage-2 injury).
+                        </div>
+                        <div class="card-task">
+                            <span class="dot-blue"></span> Reposition q2h; skin check each shift.
+                        </div>
+                    </div>
+
+                    <!-- Care Area 3: Nutrition -->
+                    <div class="care-area-card">
+                        <div class="card-header">
+                            <span class="care-area-name">Nutrition</span>
+                            <span class="status-badge on-track">On Track</span>
+                        </div>
+                        <div class="card-goal">
+                            <strong>Goal:</strong> Maintain fluid intake ≥ 1500 mL/day.
+                        </div>
+                        <div class="card-task">
+                            <span class="dot-blue"></span> Monitor fluid intake; document I/O.
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline Section -->
+                    <h3 class="section-title margin-top-lg">Activity (Care Activity Timeline)</h3>
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <div class="timeline-dot filled"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Vitals recorded (SpO2 flagged)</div>
+                                <div class="timeline-meta">Marcus Rivera, CNA • 2026-07-02 14:05</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Task 'Ambulation assist' marked Done</div>
+                                <div class="timeline-meta">Marcus Rivera, CNA • 2026-07-02 08:30</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Care plan approved & activated</div>
+                                <div class="timeline-meta">Denise Carter, DON • 2026-04-08 09:12</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Submitted for review</div>
+                                <div class="timeline-meta">Anna Lee, RN • 2026-04-07 16:40</div>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">Care plan created</div>
+                                <div class="timeline-meta">Anna Lee, RN • 2026-04-07 15:02</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Cost Estimate & Review Cycle -->
+                <div class="right-column">
+                    <!-- Cost Estimate Card -->
+                    <div class="side-card">
+                        <div class="side-card-header">
+                            <span class="side-card-title">Cost Estimate</span>
+                            <span class="tag-readonly">read-only</span>
+                        </div>
+                        
+                        <div class="cost-row">
+                            <span>LOC rate (Tier 3)</span>
+                            <strong>${{ loc_rate|default:"248.0" }} / day</strong>
+                        </div>
+                        <div class="cost-row">
+                            <span>Room rate (Semi-private)</span>
+                            <strong>${{ room_rate|default:"185.0" }} / day</strong>
+                        </div>
+
+                        <hr class="divider">
+
+                        <div class="cost-row total">
+                            <span>Estimated daily</span>
+                            <strong>${{ estimated_daily|default:"433.0" }}</strong>
+                        </div>
+                        <div class="cost-row total">
+                            <span>Estimated monthly</span>
+                            <strong>${{ estimated_monthly|default:"13163.0" }}</strong>
+                        </div>
+
+                        <div class="cost-footnote">
+                            Simulated — not a billing transaction.
+                        </div>
+                    </div>
+
+                    <!-- Review Cycle Card -->
+                    <div class="side-card margin-top-md">
+                        <div class="side-card-title margin-bottom-sm">Review Cycle</div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Last reviewed</span>
+                            <span class="info-value">{{ last_reviewed|default:"2026-04-08" }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Next review due</span>
+                            <span class="info-value">{{ next_review|default:"2026-07-04" }}</span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Cycle</span>
+                            <span class="info-value">{{ cycle_days|default:"90 days" }}</span>
+                        </div>
+
+                        <!-- SC029 HOLIDAY NOTICE -->
+                        {% if holiday_notice %}
+                        <div class="holiday-schedule-notice">
+                            {{ holiday_notice }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="side-card margin-top-md">
+                        <div class="side-card-title margin-bottom-sm">DON Actions</div>
+                        <button onclick="submitReviewAction('{% url 'care_planning:approve_care_plan' care_plan.id %}')" style="width: 100%; background: #16a34a; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 10px;">Approve Plan</button>
+                        <button onclick="submitReviewAction('{% url 'care_planning:reject_care_plan' care_plan.id %}')" style="width: 100%; background: #dc2626; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Reject / Request Changes</button>
+                    </div>
+
+                    <script>
+                    function submitReviewAction(url) {
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: 'rejection_reason=Returned for review'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if(data.status === 'success') {
+                                alert(data.message);
+                                window.location.href = "{% url 'care_planning:care_plan_list' %}";
+                            } else {
+                                alert('Error: ' + data.message);
+                            }
+                        })
+                        .catch(err => {
+                            alert('An error occurred.');
+                            console.error(err);
+                        });
+                    }
+                    </script>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

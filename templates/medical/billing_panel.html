@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Estimated Care Cost{% endblock %}
+
+{% block sidebar %}
+    {% include 'partials/sidebar_care.html' %}
+{% endblock %}
+
+{% block breadcrumb %}
+    <span class="breadcrumb-separator">›</span>
+    <a href="#" class="breadcrumb-link">Care Planning</a>
+    <span class="breadcrumb-separator">›</span>
+    <a href="#" class="breadcrumb-link">Detail</a>
+    <span class="breadcrumb-separator">›</span>
+    <a href="#" class="breadcrumb-link">#CP-1042</a>
+    <span class="breadcrumb-separator">›</span>
+    <span class="breadcrumb-current">Cost / Billing</span>
+{% endblock %}
+
+{% block content %}
+<div class="care-planning-container billing-container">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">Estimated Care Cost</h1>
+        <div class="header-actions">
+            <span class="badge badge-purple badge-outline mr-2">Role: DON</span>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fas fa-file-alt mr-1"></i> Read-only</button>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="patient-card mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="patient-name mb-1">John A. Miller</h3>
+            <p class="text-muted mb-0">Room 214 (Semi-private) &middot; Care Plan #CP-1042</p>
+        </div>
+        <div class="patient-badges">
+            <span class="badge badge-warning badge-outline mr-2">LOC Tier 3 &mdash; High</span>
+            <span class="badge badge-success badge-outline">Care Plan: Active</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row row mb-5">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper blue-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label mb-0">Estimated / day</p>
+                    <h2 class="stat-value mb-0">${{ estimated_day }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper green-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label mb-0">Estimated / month</p>
+                    <h2 class="stat-value mb-0">${{ estimated_month }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper orange-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <p class="stat-label mb-0">Medicare Part A <span class="alert-text ml-2">alert @90</span></p>
+                    <h2 class="stat-value mb-0">Day 62 / 100</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Breakdown Table -->
+    <h4 class="section-title mb-3">Cost breakdown</h4>
+    <div class="table-responsive bg-white rounded border mb-4">
+        <table class="table billing-table mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 30%">COST ITEM</th>
+                    <th style="width: 50%">SOURCE</th>
+                    <th style="width: 20%" class="text-right">RATE / DAY</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>LOC daily rate</strong></td>
+                    <td>
+                        <span class="badge source-badge badge-blue">AD-06</span>
+                        <span class="text-muted ml-2">LOC Rate Table (Tier 3)</span>
+                    </td>
+                    <td class="text-right"><strong>${{ loc_daily_rate }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Room rate</strong></td>
+                    <td>
+                        <span class="badge source-badge badge-purple-light">AD-05</span>
+                        <span class="text-muted ml-2">Facility &middot; Room 214 (Semi)</span>
+                    </td>
+                    <td class="text-right"><strong>${{ room_rate }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Medication (est.)</strong></td>
+                    <td>
+                        <span class="badge source-badge badge-gray">eMAR</span>
+                        <span class="text-muted ml-2">Pharmacy &mdash; simulated</span>
+                    </td>
+                    <td class="text-right"><strong>${{ medication_est }}</strong></td>
+                </tr>
+                <tr class="subtotal-row">
+                    <td><strong>Subtotal per day</strong></td>
+                    <td></td>
+                    <td class="text-right text-primary"><strong>${{ subtotal_per_day }}</strong></td>
+                </tr>
+                <!-- Holiday Surcharge Row -->
+                <tr class="holiday-row">
+                    <td><strong class="text-danger">Holiday Surcharge (est.)</strong></td>
+                    <td>
+                        <span class="badge source-badge badge-red">CR-HOL</span>
+                        <span class="text-muted ml-2">US Holidays ({{ holiday_days }} day)</span>
+                    </td>
+                    <td class="text-right text-danger"><strong>+${{ total_holiday_surcharge }} / mo</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Warning Banner -->
+    <div class="warning-banner bottom-banner d-flex justify-content-center align-items-center">
+        <span><strong class="text-warning-dark">Medicare Part A (SNF): Day 62 of 100 covered &middot; alert at Day 90 &middot; coverage locks at Day 100</strong></span>
+    </div>
+
+</div>
+{% endblock %}

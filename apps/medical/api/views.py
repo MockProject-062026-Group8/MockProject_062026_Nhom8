@@ -1,4 +1,3 @@
-
 import csv
 from django.http import HttpResponse
 from rest_framework import generics
@@ -9,6 +8,26 @@ from django.shortcuts import get_object_or_404
 from apps.residents.models import Resident
 from apps.medical.models import ResidentCareLevelHistory
 from .serializers import ResidentCareLevelHistorySerializer
+
+from rest_framework import viewsets
+
+from apps.medical.models import CareLevel, CarePlan, CareGoal
+from .serializers import (
+    CareLevelSerializer,
+    CarePlanSerializer,
+    CareGoalSerializer,
+)
+
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from apps.medical.models import PreAdmissionScreening
+from apps.medical.api.serializers import PreAdmissionScreeningSerializer
+
+from apps.residents.models import Admission
+from apps.medical.api.serializers import AdmissionCreateSerializer
+
+
 
 class ResidentCareLevelHistoryListView(generics.ListAPIView):
     serializer_class = ResidentCareLevelHistorySerializer
@@ -43,11 +62,7 @@ class ResidentCareLevelHistoryExportView(APIView):
             
         return response
 
-from rest_framework import generics, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from apps.medical.models import PreAdmissionScreening
-from apps.medical.api.serializers import PreAdmissionScreeningSerializer
+
 
 class PreAdmissionScreeningCreateUpdateAPIView(generics.CreateAPIView, generics.UpdateAPIView):
     queryset = PreAdmissionScreening.objects.all()
@@ -103,23 +118,11 @@ class ComplianceCheckAPIView(APIView):
             'needs_checked': len(clinical_needs)
         }, status=status.HTTP_200_OK)
 
-from apps.residents.models import Admission
-from apps.medical.api.serializers import AdmissionCreateSerializer
+
 
 class AdmissionCreateAPIView(generics.CreateAPIView):
     queryset = Admission.objects.all()
     serializer_class = AdmissionCreateSerializer
-
-
-
-from rest_framework import viewsets
-
-from apps.medical.models import CareLevel, CarePlan, CareGoal
-from .serializers import (
-    CareLevelSerializer,
-    CarePlanSerializer,
-    CareGoalSerializer,
-)
 
 
 class CareLevelViewSet(viewsets.ModelViewSet):
