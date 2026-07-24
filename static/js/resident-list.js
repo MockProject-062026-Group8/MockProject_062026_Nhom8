@@ -72,11 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tdReferral.textContent = res.referral_source || 'N/A';
 
             const tdAction = document.createElement('td');
-            const viewBtn = document.createElement('button');
+            const viewBtn = document.createElement('a');
             viewBtn.className = 'btn btn-sm btn-secondary';
             viewBtn.textContent = 'View';
-            viewBtn.disabled = true;
-            viewBtn.setAttribute('aria-disabled', 'true');
+            viewBtn.href = `/residents/resident_details/${res.id}/`;
             tdAction.appendChild(viewBtn);
 
             tr.appendChild(tdName);

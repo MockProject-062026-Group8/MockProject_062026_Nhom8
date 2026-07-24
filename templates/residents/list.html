@@ -1,15 +1,18 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Residents</title>
-    <link rel="stylesheet" href="{% static 'css/resident-list.css' %}">
-</head>
-<body>
+
+{% block title %}Residents{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/resident-list.css' %}">
+{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb">Residents &gt; List</div>
+{% endblock %}
+
+{% block content %}
 <div class="resident-list-container">
-    <div class="breadcrumb">Residents &gt; List</div>
     <div class="header-actions">
         <h1>Residents</h1>
         <a href="{% url 'residents:resident_create' %}" class="btn btn-primary" id="addResidentBtn" style="display: none;">+ Add New Resident</a>
@@ -93,6 +96,8 @@
         <button id="nextPageBtn" disabled>Next</button>
     </div>
 </div>
-    <script src="{% static 'js/resident-list.js' %}"></script>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/resident-list.js' %}?v=2"></script>
+{% endblock %}

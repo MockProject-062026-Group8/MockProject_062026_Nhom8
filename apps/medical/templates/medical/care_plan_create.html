@@ -1,105 +1,31 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NHMS - New Care Plan</title>
-    
-    <!-- Link đến file CSS riêng của nhóm -->
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/care_plan_create.css' %}">
-    <!-- Bootstrap Icons như nhóm sử dụng -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
 
-<div class="layout">
+{% block title %}NHMS - New Care Plan{% endblock %}
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div>
-            <!-- Brand / Logo -->
-            <div class="brand">
-                <i class="bi bi-heart-pulse-fill icon-primary"></i>
-                <div>
-                    <h2>NHMS</h2>
-                    <small>Nursing Home System</small>
-                </div>
-            </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/care_plan_create.css' %}?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css?v=2">
+{% endblock %}
 
-            <!-- Navigation Menu -->
-            <nav>
-                <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                <a href="#"><i class="bi bi-people"></i> Residents</a>
-                <a href="#" class="active"><i class="bi bi-clipboard2-pulse"></i> Care Plans</a>
-                <a href="#"><i class="bi bi-check2-square"></i> Tasks</a>
-                <a href="#" class="disabled"><i class="bi bi-capsule"></i> eMAR <span>soon</span></a>
-                <a href="#"><i class="bi bi-exclamation-triangle"></i> Incident & Risk</a>
-                <a href="#"><i class="bi bi-graph-up-arrow"></i> Reports</a>
-            </nav>
-        </div>
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="#">Dashboard</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="#">Care Plans</a>
+    <i class="bi bi-chevron-right"></i>
+    <span class="active">New Care Plan</span>
+</nav>
+{% endblock %}
 
-        <!-- Logout -->
-        <a href="#" class="logout">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-    </aside>
+{% block content %}
+<!-- BỌC THE FORM TẠI ĐÂY ĐỂ GỬI DỮ LIỆU VỀ BACKEND -->
+<form method="POST" action="">
+    {% csrf_token %}
+    <input type="hidden" name="resident_id" value="{{ resident_id|default:1 }}">
 
-
-    <!-- MAIN CONTENT AREA -->
-    <main class="main">
-
-        <!-- HEADER -->
-        <header class="header">
-            <div class="header-left">
-                <i class="bi bi-line-split text-muted"></i>
-                <span class="header-title">NHMS — Nursing Home Management System</span>
-            </div>
-
-            <div class="header-right">
-                <!-- Search Box -->
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="text" placeholder="Search resident, care plan...">
-                </div>
-
-                <!-- Notification -->
-                <div class="notification">
-                    <i class="bi bi-bell"></i>
-                    <span>3</span>
-                </div>
-
-                <!-- User Profile -->
-                <div class="user-profile">
-                    <div class="user-avatar">AL</div>
-                    <div class="user-info">
-                        <strong>Anna Lee</strong>
-                        <small>Nurse</small>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- BỌC THE FORM TẠI ĐÂY ĐỂ GỬI DỮ LIỆU VỀ BACKEND -->
-        <form method="POST" action="">
-            {% csrf_token %}
-            <input type="hidden" name="resident_id" value="{{ resident_id|default:1 }}">
-
-            <!-- CONTENT WRAPPER -->
-            <div class="content">
-
-                <!-- Breadcrumb -->
-                <nav class="breadcrumb">
-                    <a href="#">Dashboard</a>
-                    <i class="bi bi-chevron-right"></i>
-                    <a href="#">Care Plans</a>
-                    <i class="bi bi-chevron-right"></i>
-                    <span class="active">New Care Plan</span>
-                </nav>
-
-
+    <!-- CONTENT WRAPPER -->
+    <div class="content">
                 <!-- Page Heading -->
                 <div class="page-heading">
                     <div class="page-heading-left">
@@ -381,10 +307,6 @@
                     </button>
                 </div>
 
-            </div> <!-- End Content -->
-        </form>
-
-    </main>
-</div>
-</body>
-</html>
+    </div> <!-- End Content -->
+</form>
+{% endblock %}

@@ -1,87 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NHMS - Care Plan Locked</title>
+{% extends 'base.html' %}
+{% load static %}
 
-    {% load static %}
-    <!-- File CSS chung của dự án -->
-    <link rel="stylesheet" href="{% static 'css/care_plan_create.css' %}">
-    <!-- File CSS riêng cho màn hình khóa -->
-    <link rel="stylesheet" href="{% static 'css/care_plan_locked.css' %}">
+{% block title %}NHMS - Care Plan Locked{% endblock %}
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/care_plan_create.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/care_plan_locked.css' %}?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+{% endblock %}
 
-<div class="layout">
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="#">Care Planning</a>
+    <i class="bi bi-chevron-right"></i>
+    <span class="active">New Care Plan</span>
+</nav>
+{% endblock %}
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div>
-            <div class="brand">
-                <i class="bi bi-heart-pulse-fill icon-primary"></i>
-                <div>
-                    <h2>NHMS</h2>
-                    <small>Nursing Home System</small>
-                </div>
-            </div>
-
-            <nav>
-                <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                <a href="#"><i class="bi bi-people"></i> Residents</a>
-                <a href="#" class="active"><i class="bi bi-clipboard2-pulse"></i> Care Planning</a>
-                <a href="#" class="disabled"><i class="bi bi-capsule"></i> eMAR <span>soon</span></a>
-                <a href="#"><i class="bi bi-exclamation-triangle"></i> Incident & Risk</a>
-                <a href="#"><i class="bi bi-graph-up-arrow"></i> Reports</a>
-            </nav>
-        </div>
-
-        <a href="#" class="logout">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-    </aside>
-
-
-    <!-- MAIN CONTENT -->
-    <main class="main">
-
-        <!-- HEADER -->
-        <header class="header">
-            <div class="header-left">
-                <i class="bi bi-line-split text-muted"></i>
-                <span class="header-title">NHMS — Nursing Home Management System</span>
-            </div>
-
-            <div class="header-right">
-                <div class="notification">
-                    <i class="bi bi-bell"></i>
-                    <span>3</span>
-                </div>
-                <div class="user-profile">
-                    <div class="user-avatar">AL</div>
-                    <div class="user-info">
-                        <strong>Anna Lee</strong>
-                        <small>Nurse</small>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-
-        <!-- CONTENT WRAPPER -->
-        <div class="content">
-
-            <!-- Breadcrumb -->
-            <nav class="breadcrumb">
-                <a href="#">Care Planning</a>
-                <i class="bi bi-chevron-right"></i>
-                <span class="active">New Care Plan</span>
-            </nav>
-
+{% block content %}
+<div class="content">
 
             <!-- Page Heading -->
             <div class="page-heading">
@@ -132,11 +69,5 @@
                 <a href="#" class="btn-blue-primary">Go to LOC Classification →</a>
             </div>
 
-        </div>
-
-    </main>
-
 </div>
-
-</body>
-</html>
+{% endblock %}
