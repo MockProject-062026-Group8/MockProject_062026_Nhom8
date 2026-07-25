@@ -18,6 +18,7 @@ class Room(models.Model):
     room_number = models.CharField(max_length=20)
     room_type = models.CharField(max_length=50)
     facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
+    base_rate = models.DecimalField(max_digits=18, decimal_places=2, default=140.00)
     is_deleted = models.BooleanField(default=False)
 
     class Meta:

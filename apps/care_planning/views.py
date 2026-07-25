@@ -390,18 +390,18 @@ def care_plan_ack(request):
                 'status_class': status_class
             })
             
-    physician_name = 'Dr. Alan Cho, MD'
-    physician_license = 'CA-MD-88231'
-    physician_npi = '1720493857'
+    physician_name = 'Not Assigned'
+    physician_license = 'N/A'
+    physician_npi = 'N/A'
     
     if plan and hasattr(plan.resident, 'admission_set'):
         admission = plan.resident.admission_set.first()
         if admission and admission.admitting_physician:
             physician_name = f"Dr. {admission.admitting_physician.first_name} {admission.admitting_physician.last_name}, MD"
-            physician_license = admission.admitting_physician.license_number or physician_license
-            physician_npi = admission.admitting_physician.npi or physician_npi
+            physician_license = admission.admitting_physician.license_number or 'N/A'
+            physician_npi = admission.admitting_physician.npi or 'N/A'
             
-    dietary_name = 'Grace Liu, RD'
+    dietary_name = 'Not Assigned'
     from apps.accounts.models import User
     dietary_user = User.objects.filter(role__role_name__icontains='Dietary').first()
     if not dietary_user:
@@ -411,7 +411,8 @@ def care_plan_ack(request):
             dietary_user = User.objects.filter(role__role_name__icontains='Nurse').first()
             
     if dietary_user:
-        dietary_name = f"{dietary_user.first_name} {dietary_user.last_name}, {dietary_user.role.role_name.split(' ')[0]}"
+        role_suffix = dietary_user.role.role_name.split(' ')[0] if dietary_user.role else 'RD'
+        dietary_name = f"{dietary_user.first_name} {dietary_user.last_name}, {role_suffix}"
         
     context = {
         'active_menu': 'pending_ack',
